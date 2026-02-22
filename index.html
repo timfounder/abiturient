@@ -6,14 +6,12 @@
     <title>Abituriyent Anketasi</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* --- CSS Переменные и Базовые стили --- */
         :root {
             --tg-theme-bg-color: #ffffff;
             --tg-theme-secondary-bg-color: #f2f2f7;
             --tg-theme-text-color: #000000;
             --tg-theme-hint-color: #8e8e93;
             --tg-theme-button-color: #007aff;
-            --tg-theme-button-text-color: #ffffff;
             
             --border-radius: 16px;
             --input-bg: var(--tg-theme-secondary-bg-color);
@@ -24,78 +22,47 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--tg-theme-secondary-bg-color);
             color: var(--tg-theme-text-color);
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
+            margin: 0; padding: 20px; box-sizing: border-box;
             background-image: linear-gradient(to bottom, var(--tg-theme-secondary-bg-color), var(--tg-theme-bg-color));
             min-height: 100vh;
         }
 
-        h2 {
-            font-size: 20px;
-            font-weight: 700;
-            margin: 24px 0 12px 4px;
-            color: var(--tg-theme-text-color);
-        }
+        h2 { font-size: 20px; font-weight: 700; margin: 24px 0 12px 4px; color: var(--tg-theme-text-color); }
         h2:first-child { margin-top: 0; }
 
-        /* --- Карточки --- */
         .card {
             background-color: var(--tg-theme-bg-color);
             border-radius: var(--border-radius);
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(0,0,0,0.05);
+            padding: 20px; margin-bottom: 24px;
+            box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,0.05);
         }
 
         .form-group { margin-bottom: 20px; }
         .form-group:last-child { margin-bottom: 0; }
 
         label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            color: var(--tg-theme-hint-color);
-            margin-left: 4px;
+            display: block; font-size: 13px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 8px; color: var(--tg-theme-hint-color); margin-left: 4px;
         }
 
-        /* --- Инпуты и Селекты --- */
         input, select {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 12px;
-            font-size: 17px;
-            background-color: var(--input-bg);
-            color: var(--tg-theme-text-color);
-            box-sizing: border-box;
-            -webkit-appearance: none;
-            appearance: none;
-            transition: all 0.3s ease;
-            font-family: inherit;
+            width: 100%; padding: 16px; border: none; border-radius: 12px;
+            font-size: 17px; background-color: var(--input-bg); color: var(--tg-theme-text-color);
+            box-sizing: border-box; -webkit-appearance: none; appearance: none;
+            transition: all 0.3s ease; font-family: inherit;
         }
 
         input:focus, select:focus {
-            outline: none;
-            background-color: var(--tg-theme-bg-color);
+            outline: none; background-color: var(--tg-theme-bg-color);
             box-shadow: 0 0 0 2px var(--tg-theme-button-color);
         }
 
         select {
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 16px center;
-            background-size: 20px;
-            padding-right: 40px;
+            background-repeat: no-repeat; background-position: right 16px center; background-size: 20px; padding-right: 40px;
         }
 
         input[type="date"] { min-height: 54px; }
-
-        /* --- Анимации --- */
         .hidden { display: none; }
     </style>
 </head>
@@ -113,7 +80,7 @@
         </div>
         <div class="form-group">
             <label>Telefon raqam</label>
-            <input type="tel" id="phone" placeholder="+998 90 123 45 67">
+            <input type="tel" id="phone" placeholder="+998 (__) ___-__-__">
         </div>
     </div>
 
@@ -173,28 +140,42 @@
     </div>
 
     <script>
-        // Твои данные уже здесь
+        // === НАСТРОЙКИ ===
         const BOT_TOKEN = "8444462509:AAEHhQRzXP1UG9KekXH-nTtLT5VLO0Vs084"; 
-        const ADMIN_ID = "6042618441"; 
+        const ADMIN_IDS = ["6042618441", "ВСТАВЬ_СЮДА_ID_MKHUJA"]; // Замени текст на ID, когда узнаешь
+        const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzPq-j41Ijov8dzG_9N6RHVo6OSL9mB3290T7qgPk42aLwbChY8I6SIITlxaccl0KmE_w/exec"; 
 
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
         
-        // Подстройка цветов под тему устройства пользователя
+        // Подстройка цветов
         document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
         document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f2f2f7');
         document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000');
-        document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#8e8e93');
         document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#007aff');
 
-        // Настройка главной кнопки Telegram
         tg.MainButton.text = "Yuborish";
         tg.MainButton.color = tg.themeParams.button_color || "#007aff";
         tg.MainButton.textColor = tg.themeParams.button_text_color || "#ffffff";
         tg.MainButton.show();
 
-        // Функция показа/скрытия балла
+        // Haptic Feedback
+        document.querySelectorAll('select').forEach(select => {
+            select.addEventListener('change', () => tg.HapticFeedback.selectionChanged());
+        });
+
+        // Маска для телефона
+        const phoneInput = document.getElementById('phone');
+        phoneInput.value = "+998 "; 
+        phoneInput.addEventListener('input', function (e) {
+            let x = e.target.value.replace(/\D/g, '');
+            if (!x.startsWith('998')) x = '998' + x;
+            let match = x.match(/(\d{3})(\d{0,2})(\d{0,3})(\d{0,2})(\d{0,2})/);
+            if (!match) return;
+            e.target.value = '+' + match[1] + (match[2] ? ' (' + match[2] : '') + (match[3] ? ') ' + match[3] : '') + (match[4] ? '-' + match[4] : '') + (match[5] ? '-' + match[5] : '');
+        });
+
         function toggleScoreInput() {
             const certType = document.getElementById("certType").value;
             const scoreGroup = document.getElementById("scoreGroup");
@@ -207,70 +188,79 @@
             }
         }
 
-        // Обработка клика по кнопке
         tg.MainButton.onClick(async () => {
+            tg.HapticFeedback.impactOccurred('medium'); 
+
             const data = {
                 fullName: document.getElementById("fullName").value,
-                dob: document.getElementById("dob").value,
+                dob: document.getElementById("dob").value || "Kiritilmagan",
                 phone: document.getElementById("phone").value,
                 currentStudy: document.getElementById("currentStudy").value,
                 desiredLevel: document.getElementById("desiredLevel").value,
                 certType: document.getElementById("certType").value,
                 certScore: document.getElementById("certScore").value || "Yo'q",
-                fieldOfStudy: document.getElementById("fieldOfStudy").value,
+                fieldOfStudy: document.getElementById("fieldOfStudy").value || "Kiritilmagan",
                 country: document.getElementById("country").value,
                 finalStage: document.getElementById("finalStage").value
             };
 
-            // Проверка обязательных полей
-            if (!data.fullName || !data.phone) {
-                tg.showAlert("Iltimos, ism va telefon raqamingizni kiriting!");
+            // Проверка: Имя и Телефон (должен быть полностью введен по маске)
+            if (!data.fullName || data.phone.length < 19) { 
+                tg.HapticFeedback.notificationOccurred('error');
+                tg.showAlert("Iltimos, ism va telefon raqamingizni to'liq kiriting!");
                 return;
             }
 
             tg.MainButton.text = "Yuborilmoqda...";
             tg.MainButton.showProgress(true);
 
-            // Текст для тебя (админа)
             const adminText = `<b>🔥 Yangi Anketa!</b>\n\n👤 <b>Ism:</b> ${data.fullName}\n📅 <b>Tug'ilgan sana:</b> ${data.dob}\n📞 <b>Telefon:</b> ${data.phone}\n🏫 <b>Hozirgi holat:</b> ${data.currentStudy}\n🎓 <b>Daraja:</b> ${data.desiredLevel}\n📜 <b>Sertifikat:</b> ${data.certType} (${data.certScore})\n📚 <b>Soha:</b> ${data.fieldOfStudy}\n🌍 <b>Davlat:</b> ${data.country}\n🎯 <b>Yakuniy:</b> ${data.finalStage}`;
 
             try {
-                // Отправка данных тебе
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                // 1. Отправка в Google Таблицы (без блокировки CORS)
+                fetch(GOOGLE_SHEETS_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: ADMIN_ID,
-                        text: adminText,
-                        parse_mode: "HTML"
-                    })
-                });
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(data)
+                }).catch(e => console.log("Google Sheets info:", e)); // Ошибки отправки в таблицу не ломают бота
 
-                // Видео в зависимости от выбора
+                // 2. Отправка админам в Telegram
+                for (const admin_id of ADMIN_IDS) {
+                    // Проверяем, что ID состоит только из цифр (чтобы не отправить на текст-заглушку)
+                    if (admin_id && /^\d+$/.test(admin_id)) {
+                        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ chat_id: admin_id, text: adminText, parse_mode: "HTML" })
+                        });
+                    }
+                }
+
+                // 3. Сообщение ученику (с видео)
                 let videoText = "";
-                if (data.finalStage === "Foundation") videoText = "Foundation dasturi haqida video: https://youtube.com/...";
-                else if (data.finalStage === "Bachelors") videoText = "Bakalavriat dasturi haqida video: https://youtube.com/...";
-                else videoText = "Magistratura dasturi haqida video: https://youtube.com/...";
+                if (data.country === "Italiya") {
+                    videoText = "Italiya bo'ylab kinematografik sayohat: https://youtu.be/твой_ролик_про_италию";
+                } else {
+                    videoText = "Germaniyada ta'lim olish: https://youtu.be/твой_ролик_про_германию";
+                }
 
-                const userText = `Ajoyib, ${data.fullName}! Arizangiz qabul qilindi ✅\n\n${videoText}\n\nIelts/Toefl sertifikatingizni adminga yuborsangiz, jarayonni tezroq boshlaymiz!`;
+                const userText = `Ajoyib, ${data.fullName}! Arizangiz qabul qilindi ✅\n\n${videoText}\n\nIelts/Toefl sertifikatingizni bizga yuborsangiz, jarayonni tezroq boshlaymiz!`;
 
-                // Отправка сообщения ученику (если он открыл Mini App из Telegram, его ID будет доступен)
                 if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: tg.initDataUnsafe.user.id,
-                            text: userText
-                        })
+                        body: JSON.stringify({ chat_id: tg.initDataUnsafe.user.id, text: userText })
                     });
                 }
 
+                tg.HapticFeedback.notificationOccurred('success');
                 tg.MainButton.hideProgress();
                 tg.showAlert("Arizangiz muvaffaqiyatli yuborildi!", () => {
                     tg.close();
                 });
             } catch (error) {
+                tg.HapticFeedback.notificationOccurred('error');
                 tg.MainButton.hideProgress();
                 tg.showAlert("Xatolik yuz berdi. Iltimos qaytadan urinib ko'ring.");
                 tg.MainButton.text = "Yuborish";
