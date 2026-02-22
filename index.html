@@ -6,53 +6,34 @@
     <title>Abituriyent Anketasi</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Стилизация под iOS и адаптация под тему Telegram */
+        /* Стилизация под iOS и Telegram */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--tg-theme-secondary-bg-color, #f2f2f7);
             color: var(--tg-theme-text-color, #000000);
-            margin: 0;
-            padding: 16px;
-            box-sizing: border-box;
+            margin: 0; padding: 16px; box-sizing: border-box;
         }
         .section {
             background-color: var(--tg-theme-bg-color, #ffffff);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
+            border-radius: 12px; padding: 16px; margin-bottom: 16px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
-        .form-group {
-            margin-bottom: 16px;
-        }
-        .form-group:last-child {
-            margin-bottom: 0;
-        }
+        .form-group { margin-bottom: 16px; }
+        .form-group:last-child { margin-bottom: 0; }
         label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: var(--tg-theme-hint-color, #8e8e93);
+            display: block; font-size: 14px; font-weight: 500;
+            margin-bottom: 8px; color: var(--tg-theme-hint-color, #8e8e93);
         }
         input, select {
-            width: 100%;
-            padding: 12px;
+            width: 100%; padding: 12px;
             border: 1px solid var(--tg-theme-hint-color, #c6c6c8);
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 8px; font-size: 16px;
             background-color: transparent;
             color: var(--tg-theme-text-color, #000000);
-            box-sizing: border-box;
-            -webkit-appearance: none; /* Убираем стандартные стили браузера */
+            box-sizing: border-box; -webkit-appearance: none;
         }
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--tg-theme-button-color, #007aff);
-        }
-        .hidden {
-            display: none;
-        }
+        input:focus, select:focus { outline: none; border-color: #007aff; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -126,32 +107,31 @@
     </div>
 
     <script>
+        // === НАСТРОЙКИ БОТА ===
+        const BOT_TOKEN = "8444462509:AAEHhQRzXP1UG9KekXH-nTtLT5VLO0Vs084"; 
+        const ADMIN_ID = "6042618441"; // Вставь сюда свой ID из @userinfobot
+
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Разворачиваем на весь экран
+        tg.expand();
         
-        // Настраиваем главную кнопку
         tg.MainButton.text = "Yuborish";
         tg.MainButton.color = tg.themeParams.button_color || "#007aff";
         tg.MainButton.textColor = tg.themeParams.button_text_color || "#ffffff";
         tg.MainButton.show();
 
-        // Логика скрытия/показа поля для балла
         function toggleScoreInput() {
             const certType = document.getElementById("certType").value;
             const scoreGroup = document.getElementById("scoreGroup");
-            const scoreLabel = document.getElementById("scoreLabel");
-            
             if (certType === "None") {
                 scoreGroup.classList.add("hidden");
                 document.getElementById("certScore").value = "";
             } else {
                 scoreGroup.classList.remove("hidden");
-                scoreLabel.innerText = `${certType} balingiz nechi?`;
+                document.getElementById("scoreLabel").innerText = `${certType} balingiz nechi?`;
             }
         }
 
-        // Отправка данных обратно в бота
-        tg.MainButton.onClick(() => {
+        tg.MainButton.onClick(async () => {
             const data = {
                 fullName: document.getElementById("fullName").value,
                 dob: document.getElementById("dob").value,
@@ -165,14 +145,51 @@
                 finalStage: document.getElementById("finalStage").value
             };
 
-            // Минимальная валидация
             if (!data.fullName || !data.phone) {
                 tg.showAlert("Iltimos, ism va telefon raqamingizni kiriting!");
                 return;
             }
 
-            // Отправляем JSON строку в бота
-            tg.sendData(JSON.stringify(data));
+            // Меняем текст кнопки на процесс загрузки
+            tg.MainButton.text = "Yuborilmoqda...";
+            tg.MainButton.showProgress(true);
+
+            // Текст для админа
+            const adminText = `<b>🔥 Yangi Anketa!</b>\n\n👤 <b>Ism:</b> ${data.fullName}\n📅 <b>Tug'ilgan sana:</b> ${data.dob}\n📞 <b>Telefon:</b> ${data.phone}\n🏫 <b>Hozirgi holat:</b> ${data.currentStudy}\n🎓 <b>Daraja:</b> ${data.desiredLevel}\n📜 <b>Sertifikat:</b> ${data.certType} (${data.certScore})\n📚 <b>Soha:</b> ${data.fieldOfStudy}\n🌍 <b>Davlat:</b> ${data.country}\n🎯 <b>Yakuniy:</b> ${data.finalStage}`;
+
+            // Отправляем данные тебе (админу) напрямую через API Telegram
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: ADMIN_ID,
+                    text: adminText,
+                    parse_mode: "HTML"
+                })
+            });
+
+            // Определяем видео для ученика
+            let videoText = "";
+            if (data.finalStage === "Foundation") videoText = "Foundation dasturi haqida video: https://youtube.com/...";
+            else if (data.finalStage === "Bachelors") videoText = "Bakalavriat dasturi haqida video: https://youtube.com/...";
+            else videoText = "Magistratura dasturi haqida video: https://youtube.com/...";
+
+            const userText = `Ajoyib, ${data.fullName}! Arizangiz qabul qilindi ✅\n\n${videoText}\n\nIelts/Toefl sertifikatingizni adminga yuborsangiz, jarayonni tezroq boshlaymiz!`;
+
+            // Отправляем сообщение юзеру (от лица бота)
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: tg.initDataUnsafe.user.id, // ID ученика берем автоматически
+                    text: userText
+                })
+            });
+
+            tg.MainButton.hideProgress();
+            tg.showAlert("Arizangiz muvaffaqiyatli yuborildi!", () => {
+                tg.close(); // Закрываем Mini App
+            });
         });
     </script>
 </body>
