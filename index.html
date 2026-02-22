@@ -15,26 +15,46 @@
             
             --border-radius: 16px;
             --input-bg: var(--tg-theme-secondary-bg-color);
-            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow: 0 4px 12px rgba(0,0,0,0.05);
+            --shadow-focus: 0 8px 24px rgba(0,122,255,0.15);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--tg-theme-secondary-bg-color);
             color: var(--tg-theme-text-color);
-            margin: 0; padding: 20px; box-sizing: border-box;
+            margin: 0; padding: 24px 20px; box-sizing: border-box;
             background-image: linear-gradient(to bottom, var(--tg-theme-secondary-bg-color), var(--tg-theme-bg-color));
             min-height: 100vh;
         }
 
-        h2 { font-size: 20px; font-weight: 700; margin: 24px 0 12px 4px; color: var(--tg-theme-text-color); }
-        h2:first-child { margin-top: 0; }
+        /* --- Индикатор прогресса --- */
+        .progress-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 5px;
+            background: rgba(0,0,0,0.05); z-index: 1000;
+        }
+        .progress-bar {
+            height: 100%; width: 0%; background: var(--tg-theme-button-color);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-top-right-radius: 4px; border-bottom-right-radius: 4px;
+        }
 
+        h2 { font-size: 20px; font-weight: 700; margin: 24px 0 12px 4px; color: var(--tg-theme-text-color); }
+        h2:first-child { margin-top: 10px; }
+
+        /* --- Карточки с эффектом фокуса --- */
         .card {
             background-color: var(--tg-theme-bg-color);
             border-radius: var(--border-radius);
             padding: 20px; margin-bottom: 24px;
-            box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: var(--shadow); 
+            border: 1px solid rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+        }
+        .card:focus-within {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-focus);
+            border-color: rgba(0,122,255,0.2);
         }
 
         .form-group { margin-bottom: 20px; }
@@ -45,9 +65,21 @@
             letter-spacing: 0.5px; margin-bottom: 8px; color: var(--tg-theme-hint-color); margin-left: 4px;
         }
 
+        /* --- Обертка для иконок --- */
+        .input-wrapper { position: relative; }
+        .input-wrapper svg {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--tg-theme-hint-color); width: 22px; height: 22px;
+            pointer-events: none; transition: color 0.3s ease;
+        }
+        
+        /* Изменение цвета иконки при фокусе инпута */
+        .input-wrapper:focus-within svg { color: var(--tg-theme-button-color); }
+
         input, select {
-            width: 100%; padding: 16px; border: none; border-radius: 12px;
-            font-size: 17px; background-color: var(--input-bg); color: var(--tg-theme-text-color);
+            width: 100%; padding: 16px 16px 16px 46px; /* Отступ слева для иконки */
+            border: none; border-radius: 12px; font-size: 17px; 
+            background-color: var(--input-bg); color: var(--tg-theme-text-color);
             box-sizing: border-box; -webkit-appearance: none; appearance: none;
             transition: all 0.3s ease; font-family: inherit;
         }
@@ -57,30 +89,48 @@
             box-shadow: 0 0 0 2px var(--tg-theme-button-color);
         }
 
+        /* Кастомная стрелочка для селектов */
         select {
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat; background-position: right 16px center; background-size: 20px; padding-right: 40px;
         }
 
         input[type="date"] { min-height: 54px; }
-        .hidden { display: none; }
+        .hidden { display: none; opacity: 0; }
+        
+        #scoreGroup { transition: opacity 0.3s ease; }
+        #scoreGroup:not(.hidden) { opacity: 1; }
+
     </style>
 </head>
 <body>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
 
     <h2>Shaxsiy ma'lumotlar</h2>
     <div class="card">
         <div class="form-group">
             <label>To’liq Ism va Familiya</label>
-            <input type="text" id="fullName" placeholder="Alisher Navoiy">
+            <div class="input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <input type="text" id="fullName" placeholder="Alisher Navoiy">
+            </div>
         </div>
         <div class="form-group">
             <label>Tug’ilgan sana</label>
-            <input type="date" id="dob">
+            <div class="input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <input type="date" id="dob">
+            </div>
         </div>
         <div class="form-group">
             <label>Telefon raqam</label>
-            <input type="tel" id="phone" placeholder="+998 (__) ___-__-__">
+            <div class="input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <input type="tel" id="phone" placeholder="+998 (__) ___-__-__">
+            </div>
         </div>
     </div>
 
@@ -88,31 +138,46 @@
     <div class="card">
         <div class="form-group">
             <label>Hozirgi holatingiz</label>
-            <select id="currentStudy">
-                <option value="Maktabda">Maktab o'quvchisi</option>
-                <option value="Maktabni bitirganman">Maktab bitiruvchisi</option>
-                <option value="Universitetda">Talaba (Universitet)</option>
-                <option value="Universitetni bitirganman">Universitet bitiruvchisi</option>
-            </select>
+            <div class="input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                <select id="currentStudy">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="Maktabda">Maktab o'quvchisi</option>
+                    <option value="Maktabni bitirganman">Maktab bitiruvchisi</option>
+                    <option value="Universitetda">Talaba (Universitet)</option>
+                    <option value="Universitetni bitirganman">Universitet bitiruvchisi</option>
+                </select>
+            </div>
         </div>
         <div class="form-group">
             <label>Topshiriladigan daraja</label>
-            <select id="desiredLevel">
-                <option value="Bachelor">Bachelor (Bakalavr)</option>
-                <option value="Master">Master (Magistr)</option>
-            </select>
+            <div class="input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                <select id="desiredLevel">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="Bachelor">Bachelor (Bakalavr)</option>
+                    <option value="Master">Master (Magistr)</option>
+                </select>
+            </div>
         </div>
         <div class="form-group">
             <label>Ingliz tili sertifikati</label>
-            <select id="certType" onchange="toggleScoreInput()">
-                <option value="None">Mavjud emas</option>
-                <option value="Ielts">IELTS</option>
-                <option value="Toefl">TOEFL</option>
-            </select>
+            <div class="input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <select id="certType" onchange="toggleScoreInput()">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="None">Mavjud emas</option>
+                    <option value="Ielts">IELTS</option>
+                    <option value="Toefl">TOEFL</option>
+                </select>
+            </div>
         </div>
         <div class="form-group hidden" id="scoreGroup">
             <label id="scoreLabel">Balingiz nechi?</label>
-            <input type="number" id="certScore" step="0.5" placeholder="Masalan: 6.5">
+            <div class="input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <input type="number" id="certScore" step="0.5" placeholder="Masalan: 6.5">
+            </div>
         </div>
     </div>
 
@@ -120,36 +185,47 @@
     <div class="card">
         <div class="form-group">
             <label>Tanlangan soha</label>
-            <input type="text" id="fieldOfStudy" placeholder="IT, Biznes, Tibbiyot...">
+            <div class="input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                <input type="text" id="fieldOfStudy" placeholder="IT, Biznes, Tibbiyot...">
+            </div>
         </div>
         <div class="form-group">
             <label>Qaysi davlatga?</label>
-            <select id="country">
-                <option value="Italiya">Italiya</option>
-                <option value="Germaniya">Germaniya</option>
-            </select>
+            <div class="input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <select id="country">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="Italiya">Italiya</option>
+                    <option value="Germaniya">Germaniya</option>
+                </select>
+            </div>
         </div>
         <div class="form-group">
             <label>Yakuniy bosqich</label>
-            <select id="finalStage">
-                <option value="Foundation">Foundation</option>
-                <option value="Bachelors">Bachelors</option>
-                <option value="Masters">Masters</option>
-            </select>
+            <div class="input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                <select id="finalStage">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="Foundation">Foundation</option>
+                    <option value="Bachelors">Bachelors</option>
+                    <option value="Masters">Masters</option>
+                </select>
+            </div>
         </div>
     </div>
 
     <script>
-        // === НАСТРОЙКИ ===
+        // === ВАЖНО: ВСТАВЬ СВОИ ДАННЫЕ СЮДА ===
         const BOT_TOKEN = "8444462509:AAEHhQRzXP1UG9KekXH-nTtLT5VLO0Vs084"; 
-        const ADMIN_IDS = ["6042618441", "ВСТАВЬ_СЮДА_ID_MKHUJA"]; // Замени текст на ID, когда узнаешь
+        const ADMIN_IDS = ["6042618441", "ВСТАВЬ_СЮДА_ID_MKHUJA"]; 
         const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzPq-j41Ijov8dzG_9N6RHVo6OSL9mB3290T7qgPk42aLwbChY8I6SIITlxaccl0KmE_w/exec"; 
+        // ======================================
 
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
         
-        // Подстройка цветов
         document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
         document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f2f2f7');
         document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000');
@@ -160,9 +236,44 @@
         tg.MainButton.textColor = tg.themeParams.button_text_color || "#ffffff";
         tg.MainButton.show();
 
-        // Haptic Feedback
+        // Логика Прогресс-бара
+        function updateProgress() {
+            const fields = ['fullName', 'dob', 'phone', 'currentStudy', 'desiredLevel', 'certType', 'fieldOfStudy', 'country', 'finalStage'];
+            let filled = 0;
+            let total = fields.length;
+
+            fields.forEach(id => {
+                const val = document.getElementById(id).value;
+                if (id === 'phone') {
+                    if (val.length >= 19) filled++;
+                } else if (val && val.trim() !== '') {
+                    filled++;
+                }
+            });
+
+            const certType = document.getElementById('certType').value;
+            if (certType === 'Ielts' || certType === 'Toefl') {
+                total++; // Добавляем поле балла в общее количество
+                const score = document.getElementById('certScore').value;
+                if (score && score.trim() !== '') filled++;
+            }
+
+            const percentage = Math.round((filled / total) * 100);
+            document.getElementById('progressBar').style.width = percentage + '%';
+        }
+
+        // Слушаем изменения во всех полях для прогресс-бара
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('input', updateProgress);
+            el.addEventListener('change', updateProgress);
+        });
+
+        // Haptic Feedback при смене селектов
         document.querySelectorAll('select').forEach(select => {
-            select.addEventListener('change', () => tg.HapticFeedback.selectionChanged());
+            select.addEventListener('change', () => {
+                tg.HapticFeedback.selectionChanged();
+                updateProgress();
+            });
         });
 
         // Маска для телефона
@@ -174,18 +285,20 @@
             let match = x.match(/(\d{3})(\d{0,2})(\d{0,3})(\d{0,2})(\d{0,2})/);
             if (!match) return;
             e.target.value = '+' + match[1] + (match[2] ? ' (' + match[2] : '') + (match[3] ? ') ' + match[3] : '') + (match[4] ? '-' + match[4] : '') + (match[5] ? '-' + match[5] : '');
+            updateProgress();
         });
 
         function toggleScoreInput() {
             const certType = document.getElementById("certType").value;
             const scoreGroup = document.getElementById("scoreGroup");
-            if (certType === "None") {
+            if (certType === "None" || certType === "") {
                 scoreGroup.classList.add("hidden");
                 document.getElementById("certScore").value = "";
             } else {
                 scoreGroup.classList.remove("hidden");
                 document.getElementById("scoreLabel").innerText = `${certType} balingiz nechi?`;
             }
+            updateProgress();
         }
 
         tg.MainButton.onClick(async () => {
@@ -193,21 +306,21 @@
 
             const data = {
                 fullName: document.getElementById("fullName").value,
-                dob: document.getElementById("dob").value || "Kiritilmagan",
+                dob: document.getElementById("dob").value || "-",
                 phone: document.getElementById("phone").value,
                 currentStudy: document.getElementById("currentStudy").value,
                 desiredLevel: document.getElementById("desiredLevel").value,
                 certType: document.getElementById("certType").value,
                 certScore: document.getElementById("certScore").value || "Yo'q",
-                fieldOfStudy: document.getElementById("fieldOfStudy").value || "Kiritilmagan",
+                fieldOfStudy: document.getElementById("fieldOfStudy").value || "-",
                 country: document.getElementById("country").value,
                 finalStage: document.getElementById("finalStage").value
             };
 
-            // Проверка: Имя и Телефон (должен быть полностью введен по маске)
-            if (!data.fullName || data.phone.length < 19) { 
+            // Проверка обязательных полей
+            if (!data.fullName || data.phone.length < 19 || !data.currentStudy || !data.desiredLevel || !data.country) { 
                 tg.HapticFeedback.notificationOccurred('error');
-                tg.showAlert("Iltimos, ism va telefon raqamingizni to'liq kiriting!");
+                tg.showAlert("Iltimos, barcha asosiy maydonlarni to'ldiring!");
                 return;
             }
 
@@ -217,16 +330,16 @@
             const adminText = `<b>🔥 Yangi Anketa!</b>\n\n👤 <b>Ism:</b> ${data.fullName}\n📅 <b>Tug'ilgan sana:</b> ${data.dob}\n📞 <b>Telefon:</b> ${data.phone}\n🏫 <b>Hozirgi holat:</b> ${data.currentStudy}\n🎓 <b>Daraja:</b> ${data.desiredLevel}\n📜 <b>Sertifikat:</b> ${data.certType} (${data.certScore})\n📚 <b>Soha:</b> ${data.fieldOfStudy}\n🌍 <b>Davlat:</b> ${data.country}\n🎯 <b>Yakuniy:</b> ${data.finalStage}`;
 
             try {
-                // 1. Отправка в Google Таблицы (без блокировки CORS)
+                // Отправка в Google Таблицы (no-cors)
                 fetch(GOOGLE_SHEETS_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
-                }).catch(e => console.log("Google Sheets info:", e)); // Ошибки отправки в таблицу не ломают бота
+                }).catch(e => console.log(e)); 
 
-                // 2. Отправка админам в Telegram
+                // Отправка админам в Telegram
                 for (const admin_id of ADMIN_IDS) {
-                    // Проверяем, что ID состоит только из цифр (чтобы не отправить на текст-заглушку)
                     if (admin_id && /^\d+$/.test(admin_id)) {
                         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                             method: 'POST',
@@ -236,7 +349,7 @@
                     }
                 }
 
-                // 3. Сообщение ученику (с видео)
+                // Сообщение ученику
                 let videoText = "";
                 if (data.country === "Italiya") {
                     videoText = "Italiya bo'ylab kinematografik sayohat: https://youtu.be/твой_ролик_про_италию";
@@ -266,6 +379,9 @@
                 tg.MainButton.text = "Yuborish";
             }
         });
+        
+        // Запуск проверки прогресса при загрузке (на случай автозаполнения)
+        setTimeout(updateProgress, 500);
     </script>
 </body>
 </html>
