@@ -6,74 +6,139 @@
     <title>Abituriyent Anketasi</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Стилизация под iOS и Telegram */
+        /* --- CSS Переменные и Базовые стили --- */
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-secondary-bg-color: #f2f2f7;
+            --tg-theme-text-color: #000000;
+            --tg-theme-hint-color: #8e8e93;
+            --tg-theme-button-color: #007aff;
+            --tg-theme-button-text-color: #ffffff;
+            
+            --border-radius: 16px;
+            --input-bg: var(--tg-theme-secondary-bg-color);
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-theme-secondary-bg-color, #f2f2f7);
-            color: var(--tg-theme-text-color, #000000);
-            margin: 0; padding: 16px; box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            background-image: linear-gradient(to bottom, var(--tg-theme-secondary-bg-color), var(--tg-theme-bg-color));
+            min-height: 100vh;
         }
-        .section {
-            background-color: var(--tg-theme-bg-color, #ffffff);
-            border-radius: 12px; padding: 16px; margin-bottom: 16px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 24px 0 12px 4px;
+            color: var(--tg-theme-text-color);
         }
-        .form-group { margin-bottom: 16px; }
+        h2:first-child { margin-top: 0; }
+
+        /* --- Карточки --- */
+        .card {
+            background-color: var(--tg-theme-bg-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .form-group { margin-bottom: 20px; }
         .form-group:last-child { margin-bottom: 0; }
+
         label {
-            display: block; font-size: 14px; font-weight: 500;
-            margin-bottom: 8px; color: var(--tg-theme-hint-color, #8e8e93);
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            color: var(--tg-theme-hint-color);
+            margin-left: 4px;
         }
+
+        /* --- Инпуты и Селекты --- */
         input, select {
-            width: 100%; padding: 12px;
-            border: 1px solid var(--tg-theme-hint-color, #c6c6c8);
-            border-radius: 8px; font-size: 16px;
-            background-color: transparent;
-            color: var(--tg-theme-text-color, #000000);
-            box-sizing: border-box; -webkit-appearance: none;
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            background-color: var(--input-bg);
+            color: var(--tg-theme-text-color);
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            appearance: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
         }
-        input:focus, select:focus { outline: none; border-color: #007aff; }
+
+        input:focus, select:focus {
+            outline: none;
+            background-color: var(--tg-theme-bg-color);
+            box-shadow: 0 0 0 2px var(--tg-theme-button-color);
+        }
+
+        select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
+
+        input[type="date"] { min-height: 54px; }
+
+        /* --- Анимации --- */
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="section">
+    <h2>Shaxsiy ma'lumotlar</h2>
+    <div class="card">
         <div class="form-group">
-            <label>To’liq Ism va Familiyangizni kiriting</label>
-            <input type="text" id="fullName" placeholder="Masalan: Alisher Navoiy">
+            <label>To’liq Ism va Familiya</label>
+            <input type="text" id="fullName" placeholder="Alisher Navoiy">
         </div>
         <div class="form-group">
-            <label>Tug’ilgan kuningiz</label>
+            <label>Tug’ilgan sana</label>
             <input type="date" id="dob">
         </div>
         <div class="form-group">
-            <label>Telefon raqamingiz</label>
+            <label>Telefon raqam</label>
             <input type="tel" id="phone" placeholder="+998 90 123 45 67">
         </div>
     </div>
 
-    <div class="section">
+    <h2>Ta'lim va Sertifikatlar</h2>
+    <div class="card">
         <div class="form-group">
-            <label>Qayerda o’qiysiz?</label>
+            <label>Hozirgi holatingiz</label>
             <select id="currentStudy">
-                <option value="Maktabda">Maktabda</option>
-                <option value="Maktabni bitirganman">Maktabni bitirganman</option>
-                <option value="Universitetda">Universitetda</option>
-                <option value="Universitetni bitirganman">Universitetni bitirganman</option>
+                <option value="Maktabda">Maktab o'quvchisi</option>
+                <option value="Maktabni bitirganman">Maktab bitiruvchisi</option>
+                <option value="Universitetda">Talaba (Universitet)</option>
+                <option value="Universitetni bitirganman">Universitet bitiruvchisi</option>
             </select>
         </div>
         <div class="form-group">
-            <label>Qaysi darajaga topshirmoqchisiz?</label>
+            <label>Topshiriladigan daraja</label>
             <select id="desiredLevel">
-                <option value="Bachelor">Bachelor</option>
-                <option value="Master">Master</option>
+                <option value="Bachelor">Bachelor (Bakalavr)</option>
+                <option value="Master">Master (Magistr)</option>
             </select>
         </div>
         <div class="form-group">
-            <label>Ingliz tili sertifikatingiz</label>
+            <label>Ingliz tili sertifikati</label>
             <select id="certType" onchange="toggleScoreInput()">
-                <option value="None">None</option>
+                <option value="None">Mavjud emas</option>
                 <option value="Ielts">IELTS</option>
                 <option value="Toefl">TOEFL</option>
             </select>
@@ -84,20 +149,21 @@
         </div>
     </div>
 
-    <div class="section">
+    <h2>Yo'nalish va Davlat</h2>
+    <div class="card">
         <div class="form-group">
-            <label>O’qimoqchi bo’lgan sohangiz</label>
+            <label>Tanlangan soha</label>
             <input type="text" id="fieldOfStudy" placeholder="IT, Biznes, Tibbiyot...">
         </div>
         <div class="form-group">
-            <label>Qaysi davlatga topshirmoqchisiz?</label>
+            <label>Qaysi davlatga?</label>
             <select id="country">
                 <option value="Italiya">Italiya</option>
                 <option value="Germaniya">Germaniya</option>
             </select>
         </div>
         <div class="form-group">
-            <label>Qaysi bosqichga topshirmoqchi ekanligingiz</label>
+            <label>Yakuniy bosqich</label>
             <select id="finalStage">
                 <option value="Foundation">Foundation</option>
                 <option value="Bachelors">Bachelors</option>
@@ -107,18 +173,28 @@
     </div>
 
     <script>
-        // === НАСТРОЙКИ БОТА ===
+        // Твои данные уже здесь
         const BOT_TOKEN = "8444462509:AAEHhQRzXP1UG9KekXH-nTtLT5VLO0Vs084"; 
-        const ADMIN_ID = "6042618441"; // Вставь сюда свой ID из @userinfobot
+        const ADMIN_ID = "6042618441"; 
 
         const tg = window.Telegram.WebApp;
+        tg.ready();
         tg.expand();
         
+        // Подстройка цветов под тему устройства пользователя
+        document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
+        document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f2f2f7');
+        document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000');
+        document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#8e8e93');
+        document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#007aff');
+
+        // Настройка главной кнопки Telegram
         tg.MainButton.text = "Yuborish";
         tg.MainButton.color = tg.themeParams.button_color || "#007aff";
         tg.MainButton.textColor = tg.themeParams.button_text_color || "#ffffff";
         tg.MainButton.show();
 
+        // Функция показа/скрытия балла
         function toggleScoreInput() {
             const certType = document.getElementById("certType").value;
             const scoreGroup = document.getElementById("scoreGroup");
@@ -131,6 +207,7 @@
             }
         }
 
+        // Обработка клика по кнопке
         tg.MainButton.onClick(async () => {
             const data = {
                 fullName: document.getElementById("fullName").value,
@@ -145,51 +222,59 @@
                 finalStage: document.getElementById("finalStage").value
             };
 
+            // Проверка обязательных полей
             if (!data.fullName || !data.phone) {
                 tg.showAlert("Iltimos, ism va telefon raqamingizni kiriting!");
                 return;
             }
 
-            // Меняем текст кнопки на процесс загрузки
             tg.MainButton.text = "Yuborilmoqda...";
             tg.MainButton.showProgress(true);
 
-            // Текст для админа
+            // Текст для тебя (админа)
             const adminText = `<b>🔥 Yangi Anketa!</b>\n\n👤 <b>Ism:</b> ${data.fullName}\n📅 <b>Tug'ilgan sana:</b> ${data.dob}\n📞 <b>Telefon:</b> ${data.phone}\n🏫 <b>Hozirgi holat:</b> ${data.currentStudy}\n🎓 <b>Daraja:</b> ${data.desiredLevel}\n📜 <b>Sertifikat:</b> ${data.certType} (${data.certScore})\n📚 <b>Soha:</b> ${data.fieldOfStudy}\n🌍 <b>Davlat:</b> ${data.country}\n🎯 <b>Yakuniy:</b> ${data.finalStage}`;
 
-            // Отправляем данные тебе (админу) напрямую через API Telegram
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: ADMIN_ID,
-                    text: adminText,
-                    parse_mode: "HTML"
-                })
-            });
+            try {
+                // Отправка данных тебе
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: ADMIN_ID,
+                        text: adminText,
+                        parse_mode: "HTML"
+                    })
+                });
 
-            // Определяем видео для ученика
-            let videoText = "";
-            if (data.finalStage === "Foundation") videoText = "Foundation dasturi haqida video: https://youtube.com/...";
-            else if (data.finalStage === "Bachelors") videoText = "Bakalavriat dasturi haqida video: https://youtube.com/...";
-            else videoText = "Magistratura dasturi haqida video: https://youtube.com/...";
+                // Видео в зависимости от выбора
+                let videoText = "";
+                if (data.finalStage === "Foundation") videoText = "Foundation dasturi haqida video: https://youtube.com/...";
+                else if (data.finalStage === "Bachelors") videoText = "Bakalavriat dasturi haqida video: https://youtube.com/...";
+                else videoText = "Magistratura dasturi haqida video: https://youtube.com/...";
 
-            const userText = `Ajoyib, ${data.fullName}! Arizangiz qabul qilindi ✅\n\n${videoText}\n\nIelts/Toefl sertifikatingizni adminga yuborsangiz, jarayonni tezroq boshlaymiz!`;
+                const userText = `Ajoyib, ${data.fullName}! Arizangiz qabul qilindi ✅\n\n${videoText}\n\nIelts/Toefl sertifikatingizni adminga yuborsangiz, jarayonni tezroq boshlaymiz!`;
 
-            // Отправляем сообщение юзеру (от лица бота)
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: tg.initDataUnsafe.user.id, // ID ученика берем автоматически
-                    text: userText
-                })
-            });
+                // Отправка сообщения ученику (если он открыл Mini App из Telegram, его ID будет доступен)
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: tg.initDataUnsafe.user.id,
+                            text: userText
+                        })
+                    });
+                }
 
-            tg.MainButton.hideProgress();
-            tg.showAlert("Arizangiz muvaffaqiyatli yuborildi!", () => {
-                tg.close(); // Закрываем Mini App
-            });
+                tg.MainButton.hideProgress();
+                tg.showAlert("Arizangiz muvaffaqiyatli yuborildi!", () => {
+                    tg.close();
+                });
+            } catch (error) {
+                tg.MainButton.hideProgress();
+                tg.showAlert("Xatolik yuz berdi. Iltimos qaytadan urinib ko'ring.");
+                tg.MainButton.text = "Yuborish";
+            }
         });
     </script>
 </body>
