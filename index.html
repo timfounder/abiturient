@@ -28,7 +28,6 @@
             min-height: 100vh;
         }
 
-        /* --- Индикатор прогресса --- */
         .progress-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 5px;
             background: rgba(0,0,0,0.05); z-index: 1000;
@@ -93,10 +92,8 @@
 
         input[type="date"] { min-height: 54px; }
         .hidden { display: none; opacity: 0; }
-        
         #scoreGroup { transition: opacity 0.3s ease; }
         #scoreGroup:not(.hidden) { opacity: 1; }
-
     </style>
 </head>
 <body>
@@ -202,7 +199,6 @@
 
     <script>
         const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzPq-j41Ijov8dzG_9N6RHVo6OSL9mB3290T7qgPk42aLwbChY8I6SIITlxaccl0KmE_w/exec"; 
-
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
@@ -213,45 +209,29 @@
         document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#007aff');
 
         tg.MainButton.text = "Yuborish";
-        tg.MainButton.color = tg.themeParams.button_color || "#007aff";
-        tg.MainButton.textColor = tg.themeParams.button_text_color || "#ffffff";
         tg.MainButton.show();
 
         function updateProgress() {
             const fields = ['fullName', 'dob', 'phone', 'currentStudy', 'certType', 'fieldOfStudy', 'country', 'finalStage'];
             let filled = 0;
             let total = fields.length;
-
             fields.forEach(id => {
                 const val = document.getElementById(id).value;
-                if (id === 'phone') {
-                    if (val.length >= 19) filled++;
-                } else if (val && val.trim() !== '') {
-                    filled++;
-                }
+                if (id === 'phone') { if (val.length >= 19) filled++; }
+                else if (val && val.trim() !== '') { filled++; }
             });
-
             const certType = document.getElementById('certType').value;
             if (certType === 'Ielts' || certType === 'Toefl') {
                 total++; 
                 const score = document.getElementById('certScore').value;
                 if (score && score.trim() !== '') filled++;
             }
-
-            const percentage = Math.round((filled / total) * 100);
-            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('progressBar').style.width = Math.round((filled / total) * 100) + '%';
         }
 
         document.querySelectorAll('input, select').forEach(el => {
             el.addEventListener('input', updateProgress);
             el.addEventListener('change', updateProgress);
-        });
-
-        document.querySelectorAll('select').forEach(select => {
-            select.addEventListener('change', () => {
-                tg.HapticFeedback.selectionChanged();
-                updateProgress();
-            });
         });
 
         const phoneInput = document.getElementById('phone');
@@ -279,8 +259,6 @@
         }
 
         tg.MainButton.onClick(() => {
-            tg.HapticFeedback.impactOccurred('medium'); 
-
             const data = {
                 fullName: document.getElementById("fullName").value,
                 dob: document.getElementById("dob").value || "-",
@@ -294,12 +272,10 @@
             };
 
             if (!data.fullName || data.phone.length < 19 || !data.currentStudy || !data.country || !data.finalStage) { 
-                tg.HapticFeedback.notificationOccurred('error');
                 tg.showAlert("Iltimos, barcha asosiy maydonlarni to'ldiring!");
                 return;
             }
 
-            // Отправка в Google Sheets
             fetch(GOOGLE_SHEETS_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -307,11 +283,9 @@
                 body: JSON.stringify(data)
             }).catch(e => console.log(e)); 
 
-            // БЕЗОПАСНАЯ ОТПРАВКА ДАННЫХ В PYTHON BOT
             tg.sendData(JSON.stringify(data));
             tg.close();
         });
-        
         setTimeout(updateProgress, 500);
     </script>
 </body>
