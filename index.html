@@ -14,79 +14,53 @@
             --tg-theme-button-color: #007aff;
             --border-radius: 16px;
         }
-        body {
-            font-family: -apple-system, sans-serif;
-            background-color: var(--tg-theme-secondary-bg-color);
-            color: var(--tg-theme-text-color);
-            margin: 0; padding: 20px;
-            min-height: 100vh;
-        }
-        .progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 5px; background: rgba(0,0,0,0.05); z-index: 1000; }
-        .progress-bar { height: 100%; width: 0%; background: var(--tg-theme-button-color); transition: width 0.4s; }
-        h2 { font-size: 18px; margin: 20px 0 10px 5px; }
+        body { font-family: -apple-system, sans-serif; background: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); margin: 0; padding: 20px; }
         .card { background: var(--tg-theme-bg-color); border-radius: var(--border-radius); padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 12px; font-weight: 600; color: var(--tg-theme-hint-color); margin-bottom: 5px; text-transform: uppercase; }
+        label { display: block; font-size: 11px; font-weight: 700; color: var(--tg-theme-hint-color); margin-bottom: 5px; text-transform: uppercase; }
         input, select { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); font-size: 16px; box-sizing: border-box; }
         .hidden { display: none; }
+        h2 { font-size: 18px; margin: 10px 0; }
     </style>
 </head>
 <body>
-    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
 
     <h2>Shaxsiy ma'lumotlar 👤</h2>
     <div class="card">
-        <div class="form-group">
-            <label>To’liq Ism va Familiya 📝</label>
-            <input type="text" id="fullName" placeholder="Alisher Navoiy">
-        </div>
-        <div class="form-group">
-            <label>Tug’ilgan sana 📅</label>
-            <input type="date" id="dob">
-        </div>
-        <div class="form-group">
-            <label>Telefon raqam 📱</label>
-            <input type="tel" id="phone" placeholder="+998 (__) ___-__-__">
-        </div>
+        <div class="form-group"><label>To’liq Ism и Familiya 📝</label><input type="text" id="fullName" placeholder="Muhammadxuja Eshnazarov"></div>
+        <div class="form-group"><label>Tug’ilgan sana 📅</label><input type="date" id="dob"></div>
+        <div class="form-group"><label>Telefon raqam 📱</label><input type="tel" id="phone" placeholder="+998 (00) 000-00-00"></div>
     </div>
 
-    <h2>Ta'lim va Sertifikatlar 📚</h2>
+    <h2>Ta'lim 📚</h2>
     <div class="card">
         <div class="form-group">
             <label>Hozirgi holatingiz 🏫</label>
             <select id="currentStudy">
-                <option value="" disabled selected>Tanlang...</option>
-                <option value="Maktab/College o’quvchisi">Maktab/College o’quvchisi</option>
-                <option value="Maktab/Collegeni bitirganman">Maktab/Collegeni bitirganman / Gap year</option>
-                <option value="Universitet talabasi">Universitet talabasi</option>
-                <option value="Universitetni bitirganman">Universitetni bitirganman</option>
+                <option value="Maktab/College">Maktab/College o’quvchisi</option>
+                <option value="Gap year">Gap year / Bitirganman</option>
+                <option value="Talaba">Universitet talabasi</option>
             </select>
         </div>
         <div class="form-group">
             <label>Sertifikat 📜</label>
-            <select id="certType" onchange="toggleScoreInput()">
-                <option value="" disabled selected>Tanlang...</option>
+            <select id="certType" onchange="toggleScore()">
                 <option value="None">Mavjud emas</option>
                 <option value="Ielts">IELTS</option>
                 <option value="Toefl">TOEFL</option>
             </select>
         </div>
-        <div class="form-group hidden" id="scoreGroup">
-            <label id="scoreLabel">Ball 🎯</label>
-            <input type="number" id="certScore" step="0.5" placeholder="6.5">
+        <div id="scoreGroup" class="hidden">
+            <label>Ball 🎯</label><input type="number" id="certScore" placeholder="7.0">
         </div>
     </div>
 
-    <h2>Yo'nalish va Davlat 🌍</h2>
+    <h2>Yo'nalish 🌍</h2>
     <div class="card">
-        <div class="form-group">
-            <label>Soha 💼</label>
-            <input type="text" id="fieldOfStudy" placeholder="IT, Biznes...">
-        </div>
+        <div class="form-group"><label>Soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law"></div>
         <div class="form-group">
             <label>Davlat ✈️</label>
             <select id="country">
-                <option value="" disabled selected>Tanlang...</option>
                 <option value="Italiya">Italiya</option>
                 <option value="Germaniya">Germaniya</option>
             </select>
@@ -94,7 +68,6 @@
         <div class="form-group">
             <label>Topshiriladigan daraja 🎓</label>
             <select id="finalStage">
-                <option value="" disabled selected>Tanlang...</option>
                 <option value="Foundation">Foundation</option>
                 <option value="Bachelors">Bachelors</option>
                 <option value="Masters">Masters</option>
@@ -107,73 +80,53 @@
         const BOT_TOKEN = "8444462509:AAEHhQRzXP1UG9KekXH-nTtLT5VLO0Vs084";
         const ADMIN_ID = "6042618441";
 
-        tg.ready();
-        tg.expand();
-        tg.MainButton.text = "Yuborish";
+        tg.ready(); tg.expand();
+        tg.MainButton.text = "YUBORISH";
         tg.MainButton.show();
 
-        function updateProgress() {
-            const fields = ['fullName', 'dob', 'phone', 'currentStudy', 'certType', 'fieldOfStudy', 'country', 'finalStage'];
-            let filled = 0;
-            fields.forEach(id => {
-                const el = document.getElementById(id);
-                if (el && el.value && el.value.trim() !== "") filled++;
-            });
-            document.getElementById('progressBar').style.width = (filled / fields.length * 100) + "%";
-        }
-
-        document.querySelectorAll('input, select').forEach(el => {
-            el.addEventListener('change', updateProgress);
-            el.addEventListener('input', updateProgress);
-        });
-
-        function toggleScoreInput() {
-            const cert = document.getElementById("certType").value;
-            const scoreGroup = document.getElementById("scoreGroup");
-            if (cert === "Ielts" || cert === "Toefl") {
-                scoreGroup.classList.remove("hidden");
-            } else {
-                scoreGroup.classList.add("hidden");
-            }
-            updateProgress();
+        function toggleScore() {
+            const val = document.getElementById("certType").value;
+            document.getElementById("scoreGroup").classList.toggle("hidden", val === "None");
         }
 
         tg.MainButton.onClick(async () => {
             tg.MainButton.showProgress();
+
+            // Сбор всех данных
             const data = {
                 name: document.getElementById("fullName").value,
+                dob: document.getElementById("dob").value,
                 phone: document.getElementById("phone").value,
-                study: document.getElementById("currentStudy").value,
+                status: document.getElementById("currentStudy").value,
+                cert: document.getElementById("certType").value,
+                score: document.getElementById("certScore").value || "N/A",
+                field: document.getElementById("fieldOfStudy").value,
                 country: document.getElementById("country").value,
                 level: document.getElementById("finalStage").value
             };
 
-            if (!data.name || !data.phone || !data.study || !data.country || !data.level) {
-                tg.hideProgress();
-                tg.showAlert("Iltimos, barcha maydonlarni to'ldiring!");
-                return;
-            }
-
-            const msg = `<b>🚀 Yangi Ariza!</b>\n\n👤 <b>F.I.O:</b> ${data.name}\n📞 <b>Tel:</b> ${data.phone}\n🌍 <b>Davlat:</b> ${data.country}\n🎓 <b>Daraja:</b> ${data.level}`;
+            // Полный текст сообщения со всеми полями
+            const fullMsg = `<b>🔥 YANGI ARIZA!</b>\n\n` +
+                           `👤 <b>Ism:</b> ${data.name}\n` +
+                           `📅 <b>Tug'ilgan sana:</b> ${data.dob}\n` +
+                           `📞 <b>Telefon:</b> ${data.phone}\n` +
+                           `🏫 <b>Hozirgi holat:</b> ${data.status}\n` +
+                           `📜 <b>Sertifikat:</b> ${data.cert} (${data.score})\n` +
+                           `📚 <b>Soha:</b> ${data.field}\n` +
+                           `🌍 <b>Davlat:</b> ${data.country}\n` +
+                           `🎓 <b>Daraja:</b> ${data.level}`;
 
             try {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: ADMIN_ID, text: msg, parse_mode: 'HTML' })
+                    body: JSON.stringify({ chat_id: ADMIN_ID, text: fullMsg, parse_mode: 'HTML' })
                 });
-                tg.showAlert("Yuborildi! ✅");
                 tg.close();
             } catch (e) {
                 tg.hideProgress();
                 tg.showAlert("Xato yuz berdi!");
             }
-        });
-
-        // Маска телефона
-        document.getElementById('phone').addEventListener('input', function (e) {
-            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,2})(\d{0,3})(\d{0,2})(\d{0,2})/);
-            e.target.value = !x[2] ? x[1] : '+' + x[1] + ' (' + x[2] + ') ' + x[3] + (x[4] ? '-' + x[4] : '') + (x[5] ? '-' + x[5] : '');
         });
     </script>
 </body>
