@@ -14,72 +14,26 @@
             --tg-theme-button-color: #007aff;
             --border-radius: 16px;
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-            background-color: var(--tg-theme-secondary-bg-color);
-            color: var(--tg-theme-text-color);
-            margin: 0; padding: 20px 16px; box-sizing: border-box;
-            min-height: 100vh;
-        }
-
-        /* Шкала прогресса сверху */
-        .progress-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 6px;
-            background: rgba(0,0,0,0.05); z-index: 1000;
-        }
-        .progress-bar {
-            height: 100%; width: 0%; background: var(--tg-theme-button-color);
-            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-top-right-radius: 4px; border-bottom-right-radius: 4px;
-        }
-
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); margin: 0; padding: 20px 16px; box-sizing: border-box; min-height: 100vh; }
+        .progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 6px; background: rgba(0,0,0,0.05); z-index: 1000; }
+        .progress-bar { height: 100%; width: 0%; background: var(--tg-theme-button-color); transition: width 0.4s ease; border-radius: 0 4px 4px 0; }
         h2 { font-size: 19px; font-weight: 700; margin: 25px 0 12px 5px; }
-        
-        .card {
-            background-color: var(--tg-theme-bg-color);
-            border-radius: var(--border-radius);
-            padding: 20px; margin-bottom: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
+        .card { background-color: var(--tg-theme-bg-color); border-radius: var(--border-radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .form-group { margin-bottom: 20px; }
         .form-group:last-child { margin-bottom: 0; }
-
-        label {
-            display: block; font-size: 13px; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.5px; margin-bottom: 8px; color: var(--tg-theme-hint-color);
-        }
-
-        input, select {
-            width: 100%; padding: 14px; border: none; border-radius: 12px;
-            font-size: 16px; background-color: var(--tg-theme-secondary-bg-color);
-            color: var(--tg-theme-text-color); box-sizing: border-box;
-            font-family: inherit; -webkit-appearance: none;
-        }
-
-        input:focus { outline: 2px solid var(--tg-theme-button-color); }
+        label { display: block; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; color: var(--tg-theme-hint-color); }
+        input, select { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); box-sizing: border-box; font-family: inherit; -webkit-appearance: none; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
-
     <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
 
     <h2>Shaxsiy ma'lumotlar 👤</h2>
     <div class="card">
-        <div class="form-group">
-            <label>To’liq Ism va Familiya 📝</label>
-            <input type="text" id="fullName" placeholder="Alisher Navoiy">
-        </div>
-        <div class="form-group">
-            <label>Tug’ilgan sana 📅</label>
-            <input type="date" id="dob">
-        </div>
-        <div class="form-group">
-            <label>Telefon raqam 📱</label>
-            <input type="tel" id="phone" value="+998 ">
-        </div>
+        <div class="form-group"><label>To’liq Ism va Familiya 📝</label><input type="text" id="fullName" placeholder="Alisher Navoiy"></div>
+        <div class="form-group"><label>Tug’ilgan sana 📅</label><input type="date" id="dob"></div>
+        <div class="form-group"><label>Telefon raqam 📱</label><input type="tel" id="phone" value="+998 "></div>
     </div>
 
     <h2>Ta'lim va Sertifikatlar 📚</h2>
@@ -89,9 +43,8 @@
             <select id="currentStudy">
                 <option value="" disabled selected>Tanlang...</option>
                 <option value="Maktab/College o’quvchisi">Maktab/College o’quvchisi</option>
-                <option value="Maktab/Collegeni bitirganman / Gap year">Maktab/Collegeni bitirganman / Gap year</option>
+                <option value="Gap year">Bitirganman / Gap year</option>
                 <option value="Universitet talabasi">Universitet talabasi</option>
-                <option value="Universitetni bitirganman">Universitetni bitirganman</option>
             </select>
         </div>
         <div class="form-group">
@@ -102,18 +55,14 @@
                 <option value="Toefl">TOEFL</option>
             </select>
         </div>
-        <div class="form-group hidden" id="scoreGroup">
-            <label>Balingiz nechi? 🎯</label>
-            <input type="number" id="certScore" placeholder="Masalan: 7.0">
+        <div id="scoreGroup" class="hidden">
+            <label>Balingiz nechi? 🎯</label><input type="number" id="certScore" placeholder="Masalan: 7.0">
         </div>
     </div>
 
     <h2>Yo'nalish va Davlat 🌍</h2>
     <div class="card">
-        <div class="form-group">
-            <label>Tanlangan soha 💼</label>
-            <input type="text" id="fieldOfStudy" placeholder="IT, Biznes, Tibbiyot...">
-        </div>
+        <div class="form-group"><label>Tanlangan soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes..."></div>
         <div class="form-group">
             <label>Qaysi davlatga? ✈️</label>
             <select id="country">
@@ -135,69 +84,49 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        const BOT_TOKEN = "8444462509:AAEHhQRzXP1UG9KekXH-nTtLT5VLO0Vs084";
-        const ADMIN_ID = "6042618441";
-
         tg.ready(); tg.expand();
-
-        // Кнопка изначально тусклая
         tg.MainButton.setParams({ text: "YUBORISH", color: "#c4c4c6", is_active: false });
         tg.MainButton.show();
 
         const phoneInput = document.getElementById('phone');
 
-        function validateForm() {
-            const fields = {
-                name: document.getElementById("fullName").value.trim(),
-                dob: document.getElementById("dob").value,
-                phone: phoneInput.value.trim(),
-                study: document.getElementById("currentStudy").value,
-                field: document.getElementById("fieldOfStudy").value.trim(),
-                country: document.getElementById("country").value,
-                level: document.getElementById("finalStage").value,
-                cert: document.getElementById("certType").value
+        function validate() {
+            const data = {
+                n: document.getElementById("fullName").value.trim(),
+                d: document.getElementById("dob").value,
+                p: phoneInput.value.trim(),
+                s: document.getElementById("currentStudy").value,
+                f: document.getElementById("fieldOfStudy").value.trim(),
+                c: document.getElementById("country").value,
+                l: document.getElementById("finalStage").value,
+                ct: document.getElementById("certType").value
             };
 
-            const isCertOk = (fields.cert === "None") || (document.getElementById("certScore").value !== "");
-            const isPhoneOk = fields.phone.length >= 14;
+            const isScoreOk = (data.ct === "None") || (document.getElementById("certScore").value !== "");
+            const isValid = data.n.length > 2 && data.d && data.p.length >= 14 && data.s && data.f && data.c && data.l && isScoreOk;
 
-            const isValid = fields.name.length > 2 && fields.dob && isPhoneOk && fields.study && fields.field && fields.country && fields.level && isCertOk;
-
-            // Активация кнопки
-            if (isValid) {
-                tg.MainButton.setParams({ color: "#007aff", is_active: true });
-            } else {
-                tg.MainButton.setParams({ color: "#c4c4c6", is_active: false });
-            }
-
-            // Обновление шкалы прогресса
-            let filled = Object.values(fields).filter(v => v !== "").length;
-            if (fields.cert !== "None" && document.getElementById("certScore").value !== "") filled++;
-            document.getElementById('progressBar').style.width = (filled / 9 * 100) + "%";
+            tg.MainButton.setParams({ color: isValid ? "#007aff" : "#c4c4c6", is_active: isValid });
+            
+            let count = Object.values(data).filter(v => v !== "").length;
+            if (data.ct !== "None" && document.getElementById("certScore").value !== "") count++;
+            document.getElementById('progressBar').style.width = (count / 9 * 100) + "%";
         }
 
-        document.querySelectorAll('input, select').forEach(el => {
-            el.addEventListener('input', validateForm);
-            el.addEventListener('change', validateForm);
-        });
+        document.querySelectorAll('input, select').forEach(el => { el.addEventListener('input', validate); el.addEventListener('change', validate); });
 
-        // Защита префикса +998
-        phoneInput.addEventListener('input', (e) => {
-            if (!e.target.value.startsWith('+998 ')) e.target.value = '+998 ';
-            validateForm();
-        });
+        phoneInput.addEventListener('input', (e) => { if (!e.target.value.startsWith('+998 ')) e.target.value = '+998 '; });
 
         function toggleScore() {
-            const val = document.getElementById("certType").value;
-            document.getElementById("scoreGroup").classList.toggle("hidden", val === "None");
-            validateForm();
+            document.getElementById("scoreGroup").classList.toggle("hidden", document.getElementById("certType").value === "None");
+            validate();
         }
 
-        tg.MainButton.onClick(async () => {
+        tg.MainButton.onClick(() => {
             tg.MainButton.showProgress();
             tg.HapticFeedback.impactOccurred('medium');
 
-            const data = {
+            // Собираем данные в красивый объект
+            const d = {
                 name: document.getElementById("fullName").value,
                 dob: document.getElementById("dob").value,
                 phone: document.getElementById("phone").value,
@@ -209,31 +138,9 @@
                 level: document.getElementById("finalStage").value
             };
 
-            const msg = `<b>🚀 YANGI ARIZA!</b>\n\n` +
-                        `👤 <b>Ism:</b> ${data.name}\n` +
-                        `📅 <b>Sana:</b> ${data.dob}\n` +
-                        `📞 <b>Tel:</b> ${data.phone}\n` +
-                        `🏫 <b>Holati:</b> ${data.study}\n` +
-                        `📜 <b>Sertifikat:</b> ${data.cert} (${data.score})\n` +
-                        `💼 <b>Soha:</b> ${data.field}\n` +
-                        `🌍 <b>Davlat:</b> ${data.country}\n` +
-                        `🎓 <b>Daraja:</b> ${data.level}`;
-
-            try {
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: ADMIN_ID, text: msg, parse_mode: 'HTML' })
-                });
-                tg.HapticFeedback.notificationOccurred('success');
-                tg.close();
-            } catch (e) {
-                tg.hideProgress();
-                tg.showAlert("Xato!");
-            }
+            // БЕЗОПАСНАЯ ОТПРАВКА: передаем данные в твой Python-скрипт
+            tg.sendData(JSON.stringify(d));
         });
-
-        validateForm();
     </script>
 </body>
 </html>
