@@ -19,7 +19,7 @@
         .progress-bar { height: 100%; width: 0%; background: var(--tg-theme-button-color); transition: width 0.4s ease; border-radius: 0 4px 4px 0; }
         h2 { font-size: 19px; font-weight: 700; margin: 25px 0 12px 5px; }
         .card { background-color: var(--tg-theme-bg-color); border-radius: var(--border-radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .form-group { margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; transition: all 0.3s ease; }
         .form-group:last-child { margin-bottom: 0; }
         label { display: block; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; color: var(--tg-theme-hint-color); }
         input, select { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); box-sizing: border-box; font-family: inherit; -webkit-appearance: none; }
@@ -36,32 +36,56 @@
         <div class="form-group"><label>Telefon raqam 📱</label><input type="tel" id="phone" value="+998 "></div>
     </div>
 
-    <h2>Ta'lim va Sertifikatlar 📚</h2>
+    <h2>Ta'lim va Baholar 📚</h2>
     <div class="card">
         <div class="form-group">
             <label>Hozirgi holatingiz 🏫</label>
-            <select id="currentStudy">
+            <select id="currentStudy" onchange="toggleStudyOptions()">
                 <option value="" disabled selected>Tanlang...</option>
-                <option value="Maktab/College o’quvchisi">Maktab/College o’quvchisi</option>
-                <option value="Gap year">Bitirganman / Gap year</option>
-                <option value="Universitet talabasi">Universitet talabasi</option>
+                <option value="Maktab">Maktab</option>
+                <option value="College">College</option>
+                <option value="Maktabni bitirganman">Maktabni bitirganman</option>
+                <option value="Kollejni bitirganman">Kollejni bitirganman</option>
+                <option value="Universitet talabasiman">Universitet talabasiman</option>
+                <option value="Universitetni bitirganman">Universitetni bitirganman</option>
             </select>
         </div>
+        
+        <div class="form-group hidden" id="studySubGroup">
+            <label id="studySubLabel">Sinf / Kurs</label>
+            <select id="studySubSelect" onchange="validate()">
+                </select>
+        </div>
+
         <div class="form-group">
-            <label>Ingliz tili sertifikati 📜</label>
-            <select id="certType" onchange="toggleScore()">
-                <option value="None">Mavjud emas</option>
-                <option value="Ielts">IELTS</option>
-                <option value="Toefl">TOEFL</option>
-            </select>
-        </div>
-        <div id="scoreGroup" class="hidden">
-            <label>Balingiz nechi? 🎯</label><input type="number" id="certScore" placeholder="Masalan: 7.0">
+            <label>O’rtacha baho / GPA</label>
+            <input type="text" id="gpa" placeholder="Masalan: 4.5 yoki 85%">
         </div>
     </div>
 
-    <h2>Yo'nalish va Davlat 🌍</h2>
+    <h2>Sertifikat va Yo'nalish 🌍</h2>
     <div class="card">
+        <div class="form-group">
+            <label>Til sertifikati 📜</label>
+            <select id="certType" onchange="toggleCertOptions()">
+                <option value="None">Mavjud emas</option>
+                <option value="IELTS">IELTS</option>
+                <option value="TOEFL">TOEFL</option>
+                <option value="Nemis tili sertifikati">Nemis tili sertifikati</option>
+            </select>
+        </div>
+
+        <div class="form-group hidden" id="scoreGroup">
+            <label>Sertifikat darajasi 🎯</label>
+            <select id="certScore" onchange="validate()">
+                <option value="" disabled selected>Tanlang...</option>
+                <option value="B1">B1</option>
+                <option value="B2">B2</option>
+                <option value="C1">C1</option>
+                <option value="C2">C2</option>
+            </select>
+        </div>
+
         <div class="form-group"><label>Tanlangan soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes..."></div>
         <div class="form-group">
             <label>Qaysi davlatga? ✈️</label>
@@ -90,55 +114,100 @@
 
         const phoneInput = document.getElementById('phone');
 
-        function validate() {
-            const data = {
-                n: document.getElementById("fullName").value.trim(),
-                d: document.getElementById("dob").value,
-                p: phoneInput.value.trim(),
-                s: document.getElementById("currentStudy").value,
-                f: document.getElementById("fieldOfStudy").value.trim(),
-                c: document.getElementById("country").value,
-                l: document.getElementById("finalStage").value,
-                ct: document.getElementById("certType").value
-            };
+        function toggleStudyOptions() {
+            const study = document.getElementById("currentStudy").value;
+            const subGroup = document.getElementById("studySubGroup");
+            const subSelect = document.getElementById("studySubSelect");
+            const subLabel = document.getElementById("studySubLabel");
 
-            const isScoreOk = (data.ct === "None") || (document.getElementById("certScore").value !== "");
-            const isValid = data.n.length > 2 && data.d && data.p.length >= 14 && data.s && data.f && data.c && data.l && isScoreOk;
+            subGroup.classList.remove("hidden");
+            subSelect.innerHTML = '<option value="" disabled selected>Tanlang...</option>';
+
+            if (study === "Maktab") {
+                subLabel.innerText = "Nechanchi sinf? 🏫";
+                [9, 10, 11].forEach(v => subSelect.innerHTML += `<option value="${v}-sinf">${v}-sinf</option>`);
+            } else if (study === "College") {
+                subLabel.innerText = "Nechanchi kurs? 🏫";
+                [1, 2].forEach(v => subSelect.innerHTML += `<option value="${v}-kurs">${v}-kurs</option>`);
+            } else if (study === "Universitet talabasiman") {
+                subLabel.innerText = "Nechanchi kurs? 🎓";
+                [1, 2, 3, 4].forEach(v => subSelect.innerHTML += `<option value="${v}-kurs">${v}-kurs</option>`);
+            } else {
+                subGroup.classList.add("hidden");
+                subSelect.value = "N/A";
+            }
+            validate();
+        }
+
+        function toggleCertOptions() {
+            const val = document.getElementById("certType").value;
+            const scoreGroup = document.getElementById("scoreGroup");
+            const scoreSelect = document.getElementById("certScore");
+            
+            if (val === "None") {
+                scoreGroup.classList.add("hidden");
+                scoreSelect.value = "N/A";
+            } else {
+                scoreGroup.classList.remove("hidden");
+                if (scoreSelect.value === "N/A") scoreSelect.value = "";
+            }
+            validate();
+        }
+
+        function validate() {
+            const requiredFields = [
+                document.getElementById("fullName"), document.getElementById("dob"), 
+                document.getElementById("currentStudy"), document.getElementById("gpa"), 
+                document.getElementById("fieldOfStudy"), document.getElementById("country"), 
+                document.getElementById("finalStage")
+            ];
+
+            const studySubGroup = document.getElementById("studySubGroup");
+            if (!studySubGroup.classList.contains("hidden")) requiredFields.push(document.getElementById("studySubSelect"));
+
+            const scoreGroup = document.getElementById("scoreGroup");
+            if (!scoreGroup.classList.contains("hidden")) requiredFields.push(document.getElementById("certScore"));
+
+            let filled = 0;
+            requiredFields.forEach(el => {
+                if (el.value && el.value.trim() !== "" && el.value !== "N/A") filled++;
+            });
+
+            if (phoneInput.value.length >= 14) filled++;
+
+            const totalFields = requiredFields.length + 1; 
+            const isValid = (filled === totalFields);
 
             tg.MainButton.setParams({ color: isValid ? "#007aff" : "#c4c4c6", is_active: isValid });
-            
-            let count = Object.values(data).filter(v => v !== "").length;
-            if (data.ct !== "None" && document.getElementById("certScore").value !== "") count++;
-            document.getElementById('progressBar').style.width = (count / 9 * 100) + "%";
+            document.getElementById('progressBar').style.width = (filled / totalFields * 100) + "%";
         }
 
         document.querySelectorAll('input, select').forEach(el => { el.addEventListener('input', validate); el.addEventListener('change', validate); });
-
-        phoneInput.addEventListener('input', (e) => { if (!e.target.value.startsWith('+998 ')) e.target.value = '+998 '; });
-
-        function toggleScore() {
-            document.getElementById("scoreGroup").classList.toggle("hidden", document.getElementById("certType").value === "None");
-            validate();
-        }
+        phoneInput.addEventListener('input', (e) => { if (!e.target.value.startsWith('+998 ')) e.target.value = '+998 '; validate(); });
 
         tg.MainButton.onClick(() => {
             tg.MainButton.showProgress();
             tg.HapticFeedback.impactOccurred('medium');
 
-            // Собираем данные в красивый объект
+            let finalStudyStatus = document.getElementById("currentStudy").value;
+            const subStudy = document.getElementById("studySubSelect").value;
+            if (subStudy && subStudy !== "N/A" && !document.getElementById("studySubGroup").classList.contains("hidden")) {
+                finalStudyStatus += ` (${subStudy})`;
+            }
+
             const d = {
                 name: document.getElementById("fullName").value,
                 dob: document.getElementById("dob").value,
                 phone: document.getElementById("phone").value,
-                study: document.getElementById("currentStudy").value,
+                study: finalStudyStatus,
+                gpa: document.getElementById("gpa").value,
                 cert: document.getElementById("certType").value,
-                score: document.getElementById("certScore").value || "Yo'q",
+                score: document.getElementById("certScore").value === "N/A" ? "Yo'q" : document.getElementById("certScore").value,
                 field: document.getElementById("fieldOfStudy").value,
                 country: document.getElementById("country").value,
                 level: document.getElementById("finalStage").value
             };
 
-            // БЕЗОПАСНАЯ ОТПРАВКА: передаем данные в твой Python-скрипт
             tg.sendData(JSON.stringify(d));
         });
     </script>
