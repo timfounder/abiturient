@@ -26,6 +26,9 @@
         input, select { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); box-sizing: border-box; font-family: inherit; -webkit-appearance: none; }
         .hidden { display: none !important; }
 
+        .dob-container { display: flex; gap: 8px; }
+        .dob-container select { flex: 1; padding: 14px 8px; text-align: center; }
+
         #resultScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: var(--tg-theme-bg-color); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
         #resultScreen.active { transform: translateY(0); }
         .ring-container { position: relative; width: 180px; height: 180px; margin-bottom: 30px; }
@@ -46,7 +49,16 @@
         <h2>Shaxsiy ma'lumotlar 👤</h2>
         <div class="card">
             <div class="form-group"><label>To’liq Ism va Familiya 📝</label><input type="text" id="fullName" placeholder="Alisher Navoiy"></div>
-            <div class="form-group"><label>Tug’ilgan sana 📅</label><input type="text" id="dob" inputmode="numeric" placeholder="25.08.2005"></div>
+            
+            <div class="form-group">
+                <label>Tug’ilgan sana 📅</label>
+                <div class="dob-container">
+                    <select id="dobDay" onchange="validate()"><option value="" disabled selected>Kun</option></select>
+                    <select id="dobMonth" onchange="validate()"><option value="" disabled selected>Oy</option></select>
+                    <select id="dobYear" onchange="validate()"><option value="" disabled selected>Yil</option></select>
+                </div>
+            </div>
+
             <div class="form-group"><label>Telefon raqam 📱</label><input type="tel" id="phone" placeholder="+998 (90) 123-45-67" value="+998 "></div>
         </div>
 
@@ -102,10 +114,7 @@
                 <input type="text" id="satScoreInput" inputmode="numeric" placeholder="Masalan: 1450">
             </div>
 
-            <div class="form-group">
-                <label>Tanlangan soha 💼</label>
-                <input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes...">
-            </div>
+            <div class="form-group"><label>Tanlangan soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes..."></div>
 
             <div class="form-group">
                 <label>Qaysi davlatga? ✈️</label>
@@ -117,7 +126,7 @@
             </div>
             <div class="form-group">
                 <label>Topshiriladigan daraja 🎓</label>
-                <select id="finalStage">
+                <select id="finalStage" onchange="validate()">
                     <option value="" disabled selected>Tanlang...</option>
                     <option value="Foundation">Foundation</option>
                     <option value="Bachelors">Bachelors (Bakalavr)</option>
@@ -169,24 +178,33 @@
             } catch (e) {}
         }
 
+        // --- ГЕНЕРАЦИЯ ДАТ РОЖДЕНИЯ ---
+        const dobDay = document.getElementById('dobDay');
+        for(let i=1; i<=31; i++) {
+            let val = i < 10 ? '0'+i : i;
+            dobDay.innerHTML += `<option value="${val}">${val}</option>`;
+        }
+        
+        const dobMonth = document.getElementById('dobMonth');
+        const months = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
+        months.forEach((m, i) => {
+            let val = i + 1;
+            val = val < 10 ? '0'+val : val;
+            dobMonth.innerHTML += `<option value="${val}">${m}</option>`;
+        });
+        
+        const dobYear = document.getElementById('dobYear');
+        const currentYear = new Date().getFullYear();
+        for(let i=currentYear-12; i>=1990; i--) { 
+            dobYear.innerHTML += `<option value="${i}">${i}</option>`;
+        }
+
         // --- МАСКИ ВВОДА ---
         const nameInput = document.getElementById('fullName');
         nameInput.addEventListener('input', function(e) {
             let start = this.selectionStart; let val = this.value;
             this.value = val.replace(/(^\w|\s\w)/g, m => m.toUpperCase());
             this.setSelectionRange(start, start); validate();
-        });
-
-        const dobInput = document.getElementById('dob');
-        dobInput.addEventListener('input', function(e) {
-            let input = this.value.replace(/\D/g, ''); 
-            if (input.length > 8) input = input.substring(0, 8); 
-            let formatted = '';
-            for(let i = 0; i < input.length; i++) {
-                if(i === 2 || i === 4) formatted += '.';
-                formatted += input[i];
-            }
-            this.value = formatted; validate();
         });
 
         const phoneInput = document.getElementById('phone');
@@ -214,9 +232,24 @@
             const study = document.getElementById("currentStudy").value;
             const subGroup = document.getElementById("studySubGroup");
             const subSelect = document.getElementById("studySubSelect");
-            if (study === "Maktab") { subGroup.classList.remove("hidden"); [9, 10, 11].forEach(v => subSelect.innerHTML += `<option value="${v}-sinf">${v}-sinf</option>`); } 
-            else if (study === "College") { subGroup.classList.remove("hidden"); [1, 2].forEach(v => subSelect.innerHTML += `<option value="${v}-kurs">${v}-kurs</option>`); } 
-            else if (study === "Universitet talabasiman") { subGroup.classList.remove("hidden"); [1, 2, 3, 4].forEach(v => subSelect.innerHTML += `<option value="${v}-kurs">${v}-kurs</option>`); } 
+            
+            // Логика блокировки Masters (Magistr) ТОЛЬКО для тех, кто НЕ из Университета
+            const finalStage = document.getElementById("finalStage");
+            const mastersOption = finalStage.querySelector('option[value="Masters"]');
+            
+            if (["Universitet talabasiman", "Universitetni bitirganman"].includes(study)) {
+                mastersOption.disabled = false;
+                mastersOption.hidden = false;
+            } else {
+                mastersOption.disabled = true;
+                mastersOption.hidden = true;
+                if (finalStage.value === "Masters") finalStage.value = ""; // Сбрасываем выбор, если был выбран Магистр
+            }
+
+            subSelect.innerHTML = '<option value="" disabled selected>Tanlang...</option>';
+            if (study === "Maktab") { subGroup.classList.remove("hidden"); document.getElementById("studySubLabel").innerText = "Nechanchi sinf? 🏫"; [9, 10, 11].forEach(v => subSelect.innerHTML += `<option value="${v}-sinf">${v}-sinf</option>`); } 
+            else if (study === "College") { subGroup.classList.remove("hidden"); document.getElementById("studySubLabel").innerText = "Nechanchi kurs? 🏫"; [1, 2].forEach(v => subSelect.innerHTML += `<option value="${v}-kurs">${v}-kurs</option>`); } 
+            else if (study === "Universitet talabasiman") { subGroup.classList.remove("hidden"); document.getElementById("studySubLabel").innerText = "Nechanchi kurs? 🎓"; [1, 2, 3, 4].forEach(v => subSelect.innerHTML += `<option value="${v}-kurs">${v}-kurs</option>`); } 
             else { subGroup.classList.add("hidden"); subSelect.value = "N/A"; }
             validate();
         }
@@ -233,6 +266,7 @@
         function toggleSatOptions() {
             const val = document.getElementById("satType").value;
             const satGroup = document.getElementById("satScoreGroup");
+            const satInput = document.getElementById("satScoreInput");
             if (val === "None") { satGroup.classList.add("hidden"); satInput.value = "N/A"; } 
             else { satGroup.classList.remove("hidden"); if (satInput.value === "N/A") satInput.value = ""; }
             validate();
@@ -244,7 +278,6 @@
             let filledCount = 0;
             let totalCount = 0;
 
-            // Функция проверки каждого поля
             const checkField = (id) => {
                 totalCount++;
                 const el = document.getElementById(id);
@@ -255,41 +288,32 @@
                 }
             };
 
-            // 1. Стандартные поля
             checkField("fullName");
             checkField("currentStudy");
             checkField("gpa");
             checkField("fieldOfStudy");
             checkField("country");
             checkField("finalStage");
+            
+            checkField("dobDay");
+            checkField("dobMonth");
+            checkField("dobYear");
 
-            // 2. Динамические поля (проверяем, только если они не скрыты)
-            if (!document.getElementById("studySubGroup").classList.contains("hidden")) {
-                checkField("studySubSelect");
-            }
-            if (!document.getElementById("scoreGroup").classList.contains("hidden")) {
-                checkField("certScoreSelect");
-            }
-            if (!document.getElementById("satScoreGroup").classList.contains("hidden")) {
-                checkField("satScoreInput");
-            }
+            if (!document.getElementById("studySubGroup").classList.contains("hidden")) checkField("studySubSelect");
+            if (!document.getElementById("scoreGroup").classList.contains("hidden")) checkField("certScoreSelect");
+            if (!document.getElementById("satScoreGroup").classList.contains("hidden")) checkField("satScoreInput");
 
-            // 3. Дата и Телефон (считаем только голые цифры)
-            totalCount += 2;
-            const dobDigits = document.getElementById("dob").value.replace(/\D/g, '').length;
-            if (dobDigits >= 8) filledCount++; else isValid = false;
-
+            totalCount++;
             const phoneDigits = document.getElementById("phone").value.replace(/\D/g, '').length;
             if (phoneDigits >= 12) filledCount++; else isValid = false;
 
-            // 4. Пробуждаем кнопку
             if (!finalPayload) {
                 tg.MainButton.setParams({ 
                     color: isValid ? "#007aff" : "#c4c4c6", 
                     is_active: isValid, 
                     text: "YUBORISH" 
                 });
-                if (isValid) tg.MainButton.show(); // Принудительный рендер
+                if (isValid) tg.MainButton.show();
             }
             
             document.getElementById('progressBar').style.width = (filledCount / totalCount * 100) + "%";
@@ -321,6 +345,8 @@
 
             const level = document.getElementById("finalStage").value;
             const country = document.getElementById("country").value;
+            
+            const finalDobStr = `${document.getElementById("dobDay").value}.${document.getElementById("dobMonth").value}.${document.getElementById("dobYear").value}`;
             
             let prob = 0; let msgText = "";
             let useSatLogic = (level === "Bachelors" && hasSat && country !== "Germaniya");
@@ -362,7 +388,7 @@
 
             finalPayload = {
                 name: document.getElementById("fullName").value,
-                dob: document.getElementById("dob").value,
+                dob: finalDobStr,
                 phone: document.getElementById("phone").value,
                 study: finalStudyStatus,
                 gpa: document.getElementById("gpa").value,
