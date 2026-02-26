@@ -71,18 +71,16 @@
         <h2>Sertifikat va Yo'nalish 🌍</h2>
         <div class="card">
             <div class="form-group">
-                <label>Sertifikat turi 📜</label>
+                <label>Til sertifikati 📜</label>
                 <select id="certType" onchange="toggleCertOptions()">
                     <option value="None">Mavjud emas</option>
                     <option value="IELTS">IELTS</option>
                     <option value="TOEFL">TOEFL</option>
                     <option value="Nemis tili sertifikati">Nemis tili sertifikati</option>
-                    <option value="SAT">SAT</option>
                 </select>
             </div>
-            
             <div class="form-group hidden" id="scoreGroup">
-                <label id="scoreLabel">Sertifikat darajasi 🎯</label>
+                <label>Sertifikat darajasi 🎯</label>
                 <select id="certScoreSelect" onchange="validate()">
                     <option value="" disabled selected>Tanlang...</option>
                     <option value="B1">B1</option>
@@ -90,7 +88,18 @@
                     <option value="C1">C1</option>
                     <option value="C2">C2</option>
                 </select>
-                <input type="text" id="certScoreInput" class="hidden" inputmode="numeric" placeholder="Masalan: 1450">
+            </div>
+
+            <div class="form-group">
+                <label>SAT Sertifikati 🎓</label>
+                <select id="satType" onchange="toggleSatOptions()">
+                    <option value="None">Mavjud emas</option>
+                    <option value="Yes">Mavjud</option>
+                </select>
+            </div>
+            <div class="form-group hidden" id="satScoreGroup">
+                <label>SAT balingiz 🎯</label>
+                <input type="text" id="satScoreInput" inputmode="numeric" placeholder="Masalan: 1450">
             </div>
 
             <div class="form-group"><label>Tanlangan soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes..."></div>
@@ -132,8 +141,6 @@
         tg.MainButton.show();
 
         let finalPayload = null;
-
-        // Бронебойная настройка SVG кольца (Радиус жестко задан = 80)
         const radius = 80;
         const circumference = radius * 2 * Math.PI;
         const circle = document.getElementById('animCircle');
@@ -143,14 +150,11 @@
         function setProgress(percent) {
             const offset = circumference - (percent / 100 * circumference);
             circle.style.strokeDashoffset = offset;
-            
-            // Жестко заданные цвета
-            if (percent < 30) circle.style.stroke = '#ff3b30'; // Красный
-            else if (percent > 70) circle.style.stroke = '#34c759'; // Зеленый
-            else circle.style.stroke = '#ffcc00'; // Желтый
+            if (percent < 30) circle.style.stroke = '#ff3b30';
+            else if (percent > 70) circle.style.stroke = '#34c759';
+            else circle.style.stroke = '#ffcc00';
         }
 
-        // Защищенная функция вибрации
         function safeVibrate(type) {
             try {
                 if (type === 'tick' && tg.HapticFeedback.selectionChanged) tg.HapticFeedback.selectionChanged();
@@ -158,7 +162,7 @@
                 else if (type === 'warning' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('warning');
                 else if (type === 'error' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('error');
                 else if (type === 'medium' && tg.HapticFeedback.impactOccurred) tg.HapticFeedback.impactOccurred('medium');
-            } catch (e) { console.log("Haptic failed", e); }
+            } catch (e) {}
         }
 
         // --- МАСКИ ВВОДА ---
@@ -192,7 +196,7 @@
             this.value = formatted; validate();
         });
 
-        const satInput = document.getElementById('certScoreInput');
+        const satInput = document.getElementById('satScoreInput');
         satInput.addEventListener('input', function(e) {
             this.value = this.value.replace(/\D/g, '');
             if (this.value.length > 4) this.value = this.value.substring(0, 4);
@@ -216,29 +220,17 @@
             const val = document.getElementById("certType").value;
             const scoreGroup = document.getElementById("scoreGroup");
             const scoreSelect = document.getElementById("certScoreSelect");
-            const scoreInput = document.getElementById("certScoreInput");
-            const scoreLabel = document.getElementById("scoreLabel");
+            if (val === "None") { scoreGroup.classList.add("hidden"); scoreSelect.value = "N/A"; } 
+            else { scoreGroup.classList.remove("hidden"); if (scoreSelect.value === "N/A") scoreSelect.value = ""; }
+            validate();
+        }
 
-            if (val === "None") { 
-                scoreGroup.classList.add("hidden"); 
-                scoreSelect.value = "N/A"; 
-                scoreInput.value = "N/A";
-            } else { 
-                scoreGroup.classList.remove("hidden"); 
-                if (val === "SAT") {
-                    scoreLabel.innerText = "SAT balingiz 🎯";
-                    scoreSelect.classList.add("hidden");
-                    scoreInput.classList.remove("hidden");
-                    scoreSelect.value = "N/A";
-                    if (scoreInput.value === "N/A") scoreInput.value = "";
-                } else {
-                    scoreLabel.innerText = "Sertifikat darajasi 🎯";
-                    scoreInput.classList.add("hidden");
-                    scoreSelect.classList.remove("hidden");
-                    scoreInput.value = "N/A";
-                    if (scoreSelect.value === "N/A") scoreSelect.value = "";
-                }
-            }
+        function toggleSatOptions() {
+            const val = document.getElementById("satType").value;
+            const satGroup = document.getElementById("satScoreGroup");
+            const satInput = document.getElementById("satScoreInput");
+            if (val === "None") { satGroup.classList.add("hidden"); satInput.value = "N/A"; } 
+            else { satGroup.classList.remove("hidden"); if (satInput.value === "N/A") satInput.value = ""; }
             validate();
         }
 
@@ -253,10 +245,10 @@
             if (!studySubGroup.classList.contains("hidden")) requiredFields.push(document.getElementById("studySubSelect"));
             
             const scoreGroup = document.getElementById("scoreGroup");
-            if (!scoreGroup.classList.contains("hidden")) {
-                if (document.getElementById("certType").value === "SAT") requiredFields.push(document.getElementById("certScoreInput"));
-                else requiredFields.push(document.getElementById("certScoreSelect"));
-            }
+            if (!scoreGroup.classList.contains("hidden")) requiredFields.push(document.getElementById("certScoreSelect"));
+
+            const satGroup = document.getElementById("satScoreGroup");
+            if (!satGroup.classList.contains("hidden")) requiredFields.push(document.getElementById("satScoreInput"));
 
             let filled = 0;
             requiredFields.forEach(el => { if (el.value && el.value.trim() !== "" && el.value !== "N/A") filled++; });
@@ -271,7 +263,6 @@
             document.getElementById('progressBar').style.width = (filled / totalFields * 100) + "%";
         }
 
-        document.querySelectorAll('input, select').forEach(el => { el.addEventListener('input', validate); el.addEventListener('change', validate); });
         function getRandom(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
         tg.MainButton.onClick(() => {
@@ -287,24 +278,31 @@
             if (isNaN(gpaVal)) gpaVal = 0;
             if (gpaVal > 5) gpaVal = (gpaVal / 100) * 5;
 
+            // Собираем Язык и SAT
             const certType = document.getElementById("certType").value;
-            let certScore = "";
-            if (certType === "SAT") certScore = document.getElementById("certScoreInput").value;
-            else if (certType !== "None") certScore = document.getElementById("certScoreSelect").value;
-            else certScore = "Yo'q";
-
+            const certScore = (certType === "None") ? "Yo'q" : document.getElementById("certScoreSelect").value;
             const hasCert = certType !== "None";
+
+            const satType = document.getElementById("satType").value;
+            const satScoreInput = document.getElementById("satScoreInput").value;
+            const hasSat = satType === "Yes";
+
             const level = document.getElementById("finalStage").value;
+            const country = document.getElementById("country").value;
             
             let prob = 0; let msgText = "";
 
-            if (level === "Bachelors" && certType === "SAT") {
-                let satVal = parseInt(certScore) || 0;
+            // --- УМНАЯ ЛОГИКА С SAT (Только Bachelors, и ИГНОР для Германии) ---
+            let useSatLogic = (level === "Bachelors" && hasSat && country !== "Germaniya");
+
+            if (useSatLogic) {
+                let satVal = parseInt(satScoreInput) || 0;
                 if (satVal >= 1400) { prob = 90; msgText = "Tabriklaymiz! Sizda Grant yutish va Chet el universitetiga kirish extimoli juda yuqori! Batafsil ma’lumot olish"; }
                 else if (satVal >= 1200) { prob = 85; msgText = "Ajoyib natija! Imkoniyatlaringiz juda yaxshi."; }
                 else if (satVal >= 1000) { prob = 80; msgText = "Yaxshi natija! Sizda imkoniyat bor."; }
                 else { prob = 70; msgText = "Sertifikat borligi yaxshi, lekin balingizni oshirish ustida ishlang!"; }
             } 
+            // --- СТАНДАРТНАЯ ЛОГИКА ---
             else if (level === "Masters") {
                 if (gpaVal > 4.3) { prob = getRandom(85, 95); msgText = "Tabriklaymiz! Sizda Grant yutish va Chet el universitetiga kirish extimoli yuqori! Batafsil ma’lumot olish"; }
                 else if (gpaVal >= 3.0) { prob = getRandom(70, 85); msgText = "Yaxshi natija! Sizda imkoniyat bor."; }
@@ -320,17 +318,31 @@
                 }
             }
 
+            // --- КРАСИВОЕ СКЛЕИВАНИЕ ДЛЯ БОТА ---
+            let finalCertStr = certType;
+            let finalScoreStr = certScore;
+
+            if (hasSat) {
+                if (finalCertStr === "None") {
+                    finalCertStr = "SAT";
+                    finalScoreStr = satScoreInput;
+                } else {
+                    finalCertStr += " + SAT";
+                    finalScoreStr += ` | SAT: ${satScoreInput}`;
+                }
+            }
+
             finalPayload = {
                 name: document.getElementById("fullName").value,
                 dob: document.getElementById("dob").value,
                 phone: document.getElementById("phone").value,
                 study: finalStudyStatus,
                 gpa: document.getElementById("gpa").value,
-                cert: certType,
-                score: certScore,
+                cert: finalCertStr,
+                score: finalScoreStr,
                 field: document.getElementById("fieldOfStudy").value,
-                country: document.getElementById("country").value,
-                level: document.getElementById("finalStage").value,
+                country: country,
+                level: level,
                 probability: prob
             };
 
@@ -338,7 +350,7 @@
             tg.MainButton.hide();
 
             let currentNum = 0;
-            let speed = 25; // Чуть замедлил для плавности
+            let speed = 25; 
             
             let interval = setInterval(() => {
                 currentNum++;
