@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Abituriyent Anketasi</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
             --tg-theme-bg-color: #ffffff;
@@ -13,6 +14,9 @@
             --tg-theme-hint-color: #8e8e93;
             --tg-theme-button-color: #007aff;
             --border-radius: 16px;
+            --success-color: #34c759;
+            --warning-color: #ffcc00;
+            --danger-color: #ff3b30;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); margin: 0; padding: 20px 16px; box-sizing: border-box; min-height: 100vh; overflow-x: hidden; }
         .progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 6px; background: rgba(0,0,0,0.05); z-index: 1000; }
@@ -25,25 +29,31 @@
         input, select { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); box-sizing: border-box; font-family: inherit; -webkit-appearance: none; }
         .hidden { display: none !important; }
 
-        /* Экран результатов (Анимация) */
+        /* Экран результатов */
         #resultScreen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
             background-color: var(--tg-theme-bg-color); z-index: 2000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
         }
         #resultScreen.active { transform: translateY(0); }
-        .circle-wrap {
-            width: 160px; height: 160px; border-radius: 50%;
-            background: var(--tg-theme-secondary-bg-color);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 10px 30px rgba(0, 122, 255, 0.2); margin-bottom: 30px;
-            border: 8px solid var(--tg-theme-button-color); transition: border-color 0.5s ease;
+        
+        /* Новое SVG кольцо */
+        .ring-container { position: relative; width: 180px; height: 180px; margin-bottom: 30px; }
+        .progress-ring { transform: rotate(-90deg); transform-origin: 50% 50%; }
+        .progress-ring__circle-bg { stroke: var(--tg-theme-secondary-bg-color); }
+        .progress-ring__circle {
+            stroke: var(--tg-theme-button-color); /* Цвет по умолчанию */
+            transition: stroke-dashoffset 0.3s ease, stroke 0.5s ease;
+        }
+        .circle-content {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center;
         }
         .percent-num { font-size: 48px; font-weight: 800; color: var(--tg-theme-text-color); }
         .percent-label { font-size: 14px; font-weight: 600; color: var(--tg-theme-hint-color); margin-top: -5px; }
-        .result-text { font-size: 20px; font-weight: 600; text-align: center; padding: 0 24px; line-height: 1.4; opacity: 0; transition: opacity 0.5s ease; }
-        .result-text.show { opacity: 1; }
+        .result-text { font-size: 20px; font-weight: 600; text-align: center; padding: 0 24px; line-height: 1.4; opacity: 0; transition: opacity 0.5s ease; transform: translateY(20px); }
+        .result-text.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body>
@@ -75,7 +85,7 @@
             <div class="form-group hidden" id="studySubGroup">
                 <label id="studySubLabel">Sinf / Kurs</label>
                 <select id="studySubSelect" onchange="validate()">
-                    </select>
+                </select>
             </div>
 
             <div class="form-group">
@@ -129,9 +139,15 @@
     </div>
 
     <div id="resultScreen">
-        <div class="circle-wrap" id="circleWrap">
-            <div class="percent-num" id="percentNum">0%</div>
-            <div class="percent-label">Imkoniyat</div>
+        <div class="ring-container">
+            <svg class="progress-ring" width="180" height="180">
+               <circle class="progress-ring__circle-bg" stroke-width="12" fill="transparent" r="80" cx="90" cy="90"/>
+               <circle class="progress-ring__circle" stroke-width="12" fill="transparent" r="80" cx="90" cy="90"/>
+            </svg>
+            <div class="circle-content">
+                <div class="percent-num" id="percentNum">0%</div>
+                <div class="percent-label">Imkoniyat</div>
+            </div>
         </div>
         <div class="result-text" id="resultText">Hisoblanmoqda...</div>
     </div>
@@ -143,9 +159,28 @@
         tg.MainButton.show();
 
         const phoneInput = document.getElementById('phone');
-        let finalPayload = null; // Сюда сохраним данные для отправки
+        let finalPayload = null;
 
-        // Управление классами/курсами
+        // Настройка SVG кольца
+        const circle = document.querySelector('.progress-ring__circle');
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = circumference;
+
+        function setProgress(percent) {
+            const offset = circumference - (percent / 100 * circumference);
+            circle.style.strokeDashoffset = offset;
+            
+            // Динамический цвет кольца
+            let color = getComputedStyle(document.documentElement).getPropertyValue('--tg-theme-button-color');
+            if (percent < 30) color = 'var(--danger-color)';
+            else if (percent > 70) color = 'var(--success-color)';
+            else color = 'var(--warning-color)';
+            circle.style.stroke = color;
+        }
+
+        // --- ЛОГИКА ФОРМЫ (Осталась прежней) ---
         function toggleStudyOptions() {
             const study = document.getElementById("currentStudy").value;
             const subGroup = document.getElementById("studySubGroup");
@@ -169,18 +204,12 @@
             validate();
         }
 
-        // Управление сертификатом
         function toggleCertOptions() {
             const val = document.getElementById("certType").value;
             const scoreGroup = document.getElementById("scoreGroup");
             const scoreSelect = document.getElementById("certScore");
-            
-            if (val === "None") {
-                scoreGroup.classList.add("hidden"); scoreSelect.value = "N/A";
-            } else {
-                scoreGroup.classList.remove("hidden");
-                if (scoreSelect.value === "N/A") scoreSelect.value = "";
-            }
+            if (val === "None") { scoreGroup.classList.add("hidden"); scoreSelect.value = "N/A"; } 
+            else { scoreGroup.classList.remove("hidden"); if (scoreSelect.value === "N/A") scoreSelect.value = ""; }
             validate();
         }
 
@@ -190,42 +219,29 @@
                 document.getElementById("currentStudy"), document.getElementById("gpa"), 
                 document.getElementById("fieldOfStudy"), document.getElementById("country"), document.getElementById("finalStage")
             ];
-
             const studySubGroup = document.getElementById("studySubGroup");
             if (!studySubGroup.classList.contains("hidden")) requiredFields.push(document.getElementById("studySubSelect"));
-
             const scoreGroup = document.getElementById("scoreGroup");
             if (!scoreGroup.classList.contains("hidden")) requiredFields.push(document.getElementById("certScore"));
 
             let filled = 0;
             requiredFields.forEach(el => { if (el.value && el.value.trim() !== "" && el.value !== "N/A") filled++; });
             if (phoneInput.value.length >= 14) filled++;
-
             const totalFields = requiredFields.length + 1; 
             const isValid = (filled === totalFields);
 
-            // Если finalPayload не пустой, значит мы на экране результата, кнопку не трогаем
-            if (!finalPayload) {
-                tg.MainButton.setParams({ color: isValid ? "#007aff" : "#c4c4c6", is_active: isValid, text: "YUBORISH" });
-            }
+            if (!finalPayload) tg.MainButton.setParams({ color: isValid ? "#007aff" : "#c4c4c6", is_active: isValid, text: "YUBORISH" });
             document.getElementById('progressBar').style.width = (filled / totalFields * 100) + "%";
         }
 
         document.querySelectorAll('input, select').forEach(el => { el.addEventListener('input', validate); el.addEventListener('change', validate); });
         phoneInput.addEventListener('input', (e) => { if (!e.target.value.startsWith('+998 ')) e.target.value = '+998 '; validate(); });
-
-        // Генератор случайных чисел
         function getRandom(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-        // Главная логика
+        // --- ГЛАВНАЯ ЛОГИКА ---
         tg.MainButton.onClick(() => {
-            if (finalPayload) {
-                // ШАГ 2: Пользователь нажал "Batafsil ma'lumot olish", закрываем и отправляем
-                tg.sendData(JSON.stringify(finalPayload));
-                return;
-            }
+            if (finalPayload) { tg.sendData(JSON.stringify(finalPayload)); return; }
 
-            // ШАГ 1: Показываем расчет
             tg.HapticFeedback.impactOccurred('medium');
             
             let finalStudyStatus = document.getElementById("currentStudy").value;
@@ -234,41 +250,31 @@
                 finalStudyStatus += ` (${subStudy})`;
             }
 
-            // Читаем GPA (парсим число из строки)
             let gpaStr = document.getElementById("gpa").value;
             let gpaVal = parseFloat(gpaStr.replace(/[^0-9.]/g, ''));
             if (isNaN(gpaVal)) gpaVal = 0;
-            if (gpaVal > 5) gpaVal = (gpaVal / 100) * 5; // Конвертируем % в шкалу 5.0
+            if (gpaVal > 5) gpaVal = (gpaVal / 100) * 5;
 
             const hasCert = document.getElementById("certType").value !== "None";
-            const level = document.getElementById("finalStage").value; // Masters
+            const level = document.getElementById("finalStage").value;
             
-            let prob = 0;
-            let msgText = "";
+            let prob = 0; let msgText = "";
 
-            // --- СЦЕНАРИИ РАСЧЕТА ---
             if (level === "Masters") {
                 if (gpaVal > 4.3) { prob = getRandom(85, 95); msgText = "Tabriklaymiz! Sizda Grant yutish va Chet el universitetiga kirish extimoli yuqori! Batafsil ma’lumot olish"; }
                 else if (gpaVal >= 3.0) { prob = getRandom(70, 85); msgText = "Yaxshi natija! Sizda imkoniyat bor."; }
                 else { prob = getRandom(10, 60); msgText = "O’zingni ustingdan ishla!"; }
             } else {
-                if (!hasCert) {
-                    prob = getRandom(10, 20); msgText = "O’zingni ustingdan ishla!";
-                } else {
+                if (!hasCert) { prob = getRandom(10, 20); msgText = "O’zingni ustingdan ishla!"; } 
+                else {
                     if (gpaVal > 3.0) {
                         if (subStudy === "9-sinf") { prob = getRandom(65, 75); msgText = "Ajoyib boshlanish! Yana ozgina harakat qiling."; }
                         else if (subStudy === "10-sinf") { prob = getRandom(75, 85); msgText = "Ajoyib natija! Imkoniyatlaringiz juda yaxshi."; }
-                        else { 
-                            // 11-sinf, College, Bitirganlar
-                            prob = getRandom(75, 85); msgText = "Tabriklaymiz! Sizda Grant yutish va Chet el universitetiga kirish extimoli yuqori! Batafsil ma’lumot olish"; 
-                        }
-                    } else {
-                        prob = getRandom(30, 60); msgText = "Sertifikat borligi yaxshi, lekin GPA ni oshirish ustida ishlang!";
-                    }
+                        else { prob = getRandom(75, 85); msgText = "Tabriklaymiz! Sizda Grant yutish va Chet el universitetiga kirish extimoli yuqori! Batafsil ma’lumot olish"; }
+                    } else { prob = getRandom(30, 60); msgText = "Sertifikat borligi yaxshi, lekin GPA ni oshirish ustida ishlang!"; }
                 }
             }
 
-            // Сохраняем данные для отправки боту
             finalPayload = {
                 name: document.getElementById("fullName").value,
                 dob: document.getElementById("dob").value,
@@ -280,34 +286,34 @@
                 field: document.getElementById("fieldOfStudy").value,
                 country: document.getElementById("country").value,
                 level: document.getElementById("finalStage").value,
-                probability: prob // ПЕРЕДАЕМ ПРОЦЕНТ АДМИНУ!
+                probability: prob
             };
 
-            // Запускаем экран анимации
             document.getElementById("resultScreen").classList.add("active");
             tg.MainButton.hide();
 
-            // Анимация бегущих цифр
+            // Анимация кольца и цифр
             let currentNum = 0;
             let speed = 20; 
             let interval = setInterval(() => {
                 currentNum++;
                 document.getElementById("percentNum").innerText = currentNum + "%";
-                tg.HapticFeedback.selectionChanged(); // Вибрация как тиканье часов
+                setProgress(currentNum); // Обновляем SVG кольцо
+                tg.HapticFeedback.selectionChanged();
                 
                 if (currentNum >= prob) {
                     clearInterval(interval);
                     document.getElementById("resultText").innerText = msgText;
                     document.getElementById("resultText").classList.add("show");
                     
-                    // Меняем цвет круга в зависимости от процента
-                    if (prob < 30) document.getElementById("circleWrap").style.borderColor = "#ff3b30";
-                    else if (prob > 70) document.getElementById("circleWrap").style.borderColor = "#34c759";
-                    else document.getElementById("circleWrap").style.borderColor = "#ffcc00";
-
-                    tg.HapticFeedback.notificationOccurred(prob > 50 ? 'success' : 'warning');
+                    // Взрыв конфетти при высоком результате! 🎉
+                    if (prob > 75) {
+                        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+                        tg.HapticFeedback.notificationOccurred('success');
+                    } else {
+                        tg.HapticFeedback.notificationOccurred(prob > 40 ? 'warning' : 'error');
+                    }
                     
-                    // Показываем кнопку для финальной отправки
                     setTimeout(() => {
                         tg.MainButton.setParams({ text: "Batafsil ma'lumot olish", color: "#34c759", is_active: true });
                         tg.MainButton.show();
