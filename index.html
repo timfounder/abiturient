@@ -14,7 +14,7 @@
             --tg-theme-button-color: #007aff;
             --border-radius: 16px;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); margin: 0; padding: 20px 16px; box-sizing: border-box; min-height: 100vh; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); margin: 0; padding: 20px 16px; box-sizing: border-box; min-height: 100vh; overflow-x: hidden; }
         .progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 6px; background: rgba(0,0,0,0.05); z-index: 1000; }
         .progress-bar { height: 100%; width: 0%; background: var(--tg-theme-button-color); transition: width 0.4s ease; border-radius: 0 4px 4px 0; }
         h2 { font-size: 19px; font-weight: 700; margin: 25px 0 12px 5px; }
@@ -23,87 +23,117 @@
         .form-group:last-child { margin-bottom: 0; }
         label { display: block; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; color: var(--tg-theme-hint-color); }
         input, select { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); box-sizing: border-box; font-family: inherit; -webkit-appearance: none; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
+
+        /* Экран результатов (Анимация) */
+        #resultScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background-color: var(--tg-theme-bg-color); z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #resultScreen.active { transform: translateY(0); }
+        .circle-wrap {
+            width: 160px; height: 160px; border-radius: 50%;
+            background: var(--tg-theme-secondary-bg-color);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 10px 30px rgba(0, 122, 255, 0.2); margin-bottom: 30px;
+            border: 8px solid var(--tg-theme-button-color); transition: border-color 0.5s ease;
+        }
+        .percent-num { font-size: 48px; font-weight: 800; color: var(--tg-theme-text-color); }
+        .percent-label { font-size: 14px; font-weight: 600; color: var(--tg-theme-hint-color); margin-top: -5px; }
+        .result-text { font-size: 20px; font-weight: 600; text-align: center; padding: 0 24px; line-height: 1.4; opacity: 0; transition: opacity 0.5s ease; }
+        .result-text.show { opacity: 1; }
     </style>
 </head>
 <body>
     <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
 
-    <h2>Shaxsiy ma'lumotlar 👤</h2>
-    <div class="card">
-        <div class="form-group"><label>To’liq Ism va Familiya 📝</label><input type="text" id="fullName" placeholder="Alisher Navoiy"></div>
-        <div class="form-group"><label>Tug’ilgan sana 📅</label><input type="date" id="dob"></div>
-        <div class="form-group"><label>Telefon raqam 📱</label><input type="tel" id="phone" value="+998 "></div>
-    </div>
-
-    <h2>Ta'lim va Baholar 📚</h2>
-    <div class="card">
-        <div class="form-group">
-            <label>Hozirgi holatingiz 🏫</label>
-            <select id="currentStudy" onchange="toggleStudyOptions()">
-                <option value="" disabled selected>Tanlang...</option>
-                <option value="Maktab">Maktab</option>
-                <option value="College">College</option>
-                <option value="Maktabni bitirganman">Maktabni bitirganman</option>
-                <option value="Kollejni bitirganman">Kollejni bitirganman</option>
-                <option value="Universitet talabasiman">Universitet talabasiman</option>
-                <option value="Universitetni bitirganman">Universitetni bitirganman</option>
-            </select>
+    <div id="formContainer">
+        <h2>Shaxsiy ma'lumotlar 👤</h2>
+        <div class="card">
+            <div class="form-group"><label>To’liq Ism va Familiya 📝</label><input type="text" id="fullName" placeholder="Alisher Navoiy"></div>
+            <div class="form-group"><label>Tug’ilgan sana 📅</label><input type="date" id="dob"></div>
+            <div class="form-group"><label>Telefon raqam 📱</label><input type="tel" id="phone" value="+998 "></div>
         </div>
-        
-        <div class="form-group hidden" id="studySubGroup">
-            <label id="studySubLabel">Sinf / Kurs</label>
-            <select id="studySubSelect" onchange="validate()">
+
+        <h2>Ta'lim va Baholar 📚</h2>
+        <div class="card">
+            <div class="form-group">
+                <label>Hozirgi holatingiz 🏫</label>
+                <select id="currentStudy" onchange="toggleStudyOptions()">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="Maktab">Maktab</option>
+                    <option value="College">College</option>
+                    <option value="Maktabni bitirganman">Maktabni bitirganman</option>
+                    <option value="Kollejni bitirganman">Kollejni bitirganman</option>
+                    <option value="Universitet talabasiman">Universitet talabasiman</option>
+                    <option value="Universitetni bitirganman">Universitetni bitirganman</option>
                 </select>
+            </div>
+            
+            <div class="form-group hidden" id="studySubGroup">
+                <label id="studySubLabel">Sinf / Kurs</label>
+                <select id="studySubSelect" onchange="validate()">
+                    </select>
+            </div>
+
+            <div class="form-group">
+                <label>O’rtacha baho / GPA</label>
+                <input type="text" id="gpa" placeholder="Masalan: 4.5 yoki 85%">
+            </div>
         </div>
 
-        <div class="form-group">
-            <label>O’rtacha baho / GPA</label>
-            <input type="text" id="gpa" placeholder="Masalan: 4.5 yoki 85%">
+        <h2>Sertifikat va Yo'nalish 🌍</h2>
+        <div class="card">
+            <div class="form-group">
+                <label>Til sertifikati 📜</label>
+                <select id="certType" onchange="toggleCertOptions()">
+                    <option value="None">Mavjud emas</option>
+                    <option value="IELTS">IELTS</option>
+                    <option value="TOEFL">TOEFL</option>
+                    <option value="Nemis tili sertifikati">Nemis tili sertifikati</option>
+                </select>
+            </div>
+
+            <div class="form-group hidden" id="scoreGroup">
+                <label>Sertifikat darajasi 🎯</label>
+                <select id="certScore" onchange="validate()">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="B1">B1</option>
+                    <option value="B2">B2</option>
+                    <option value="C1">C1</option>
+                    <option value="C2">C2</option>
+                </select>
+            </div>
+
+            <div class="form-group"><label>Tanlangan soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes..."></div>
+            <div class="form-group">
+                <label>Qaysi davlatga? ✈️</label>
+                <select id="country">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="Italiya">Italiya</option>
+                    <option value="Germaniya">Germaniya</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Topshiriladigan daraja 🎓</label>
+                <select id="finalStage">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="Foundation">Foundation</option>
+                    <option value="Bachelors">Bachelors (Bakalavr)</option>
+                    <option value="Masters">Masters (Magistr)</option>
+                </select>
+            </div>
         </div>
     </div>
 
-    <h2>Sertifikat va Yo'nalish 🌍</h2>
-    <div class="card">
-        <div class="form-group">
-            <label>Til sertifikati 📜</label>
-            <select id="certType" onchange="toggleCertOptions()">
-                <option value="None">Mavjud emas</option>
-                <option value="IELTS">IELTS</option>
-                <option value="TOEFL">TOEFL</option>
-                <option value="Nemis tili sertifikati">Nemis tili sertifikati</option>
-            </select>
+    <div id="resultScreen">
+        <div class="circle-wrap" id="circleWrap">
+            <div class="percent-num" id="percentNum">0%</div>
+            <div class="percent-label">Imkoniyat</div>
         </div>
-
-        <div class="form-group hidden" id="scoreGroup">
-            <label>Sertifikat darajasi 🎯</label>
-            <select id="certScore" onchange="validate()">
-                <option value="" disabled selected>Tanlang...</option>
-                <option value="B1">B1</option>
-                <option value="B2">B2</option>
-                <option value="C1">C1</option>
-                <option value="C2">C2</option>
-            </select>
-        </div>
-
-        <div class="form-group"><label>Tanlangan soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes..."></div>
-        <div class="form-group">
-            <label>Qaysi davlatga? ✈️</label>
-            <select id="country">
-                <option value="" disabled selected>Tanlang...</option>
-                <option value="Italiya">Italiya</option>
-                <option value="Germaniya">Germaniya</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Topshiriladigan daraja 🎓</label>
-            <select id="finalStage">
-                <option value="" disabled selected>Tanlang...</option>
-                <option value="Foundation">Foundation</option>
-                <option value="Bachelors">Bachelors (Bakalavr)</option>
-                <option value="Masters">Masters (Magistr)</option>
-            </select>
-        </div>
+        <div class="result-text" id="resultText">Hisoblanmoqda...</div>
     </div>
 
     <script>
@@ -113,40 +143,40 @@
         tg.MainButton.show();
 
         const phoneInput = document.getElementById('phone');
+        let finalPayload = null; // Сюда сохраним данные для отправки
 
+        // Управление классами/курсами
         function toggleStudyOptions() {
             const study = document.getElementById("currentStudy").value;
             const subGroup = document.getElementById("studySubGroup");
             const subSelect = document.getElementById("studySubSelect");
             const subLabel = document.getElementById("studySubLabel");
 
-            subGroup.classList.remove("hidden");
             subSelect.innerHTML = '<option value="" disabled selected>Tanlang...</option>';
 
             if (study === "Maktab") {
-                subLabel.innerText = "Nechanchi sinf? 🏫";
+                subGroup.classList.remove("hidden"); subLabel.innerText = "Nechanchi sinf? 🏫";
                 [9, 10, 11].forEach(v => subSelect.innerHTML += `<option value="${v}-sinf">${v}-sinf</option>`);
             } else if (study === "College") {
-                subLabel.innerText = "Nechanchi kurs? 🏫";
+                subGroup.classList.remove("hidden"); subLabel.innerText = "Nechanchi kurs? 🏫";
                 [1, 2].forEach(v => subSelect.innerHTML += `<option value="${v}-kurs">${v}-kurs</option>`);
             } else if (study === "Universitet talabasiman") {
-                subLabel.innerText = "Nechanchi kurs? 🎓";
+                subGroup.classList.remove("hidden"); subLabel.innerText = "Nechanchi kurs? 🎓";
                 [1, 2, 3, 4].forEach(v => subSelect.innerHTML += `<option value="${v}-kurs">${v}-kurs</option>`);
             } else {
-                subGroup.classList.add("hidden");
-                subSelect.value = "N/A";
+                subGroup.classList.add("hidden"); subSelect.value = "N/A";
             }
             validate();
         }
 
+        // Управление сертификатом
         function toggleCertOptions() {
             const val = document.getElementById("certType").value;
             const scoreGroup = document.getElementById("scoreGroup");
             const scoreSelect = document.getElementById("certScore");
             
             if (val === "None") {
-                scoreGroup.classList.add("hidden");
-                scoreSelect.value = "N/A";
+                scoreGroup.classList.add("hidden"); scoreSelect.value = "N/A";
             } else {
                 scoreGroup.classList.remove("hidden");
                 if (scoreSelect.value === "N/A") scoreSelect.value = "";
@@ -158,8 +188,7 @@
             const requiredFields = [
                 document.getElementById("fullName"), document.getElementById("dob"), 
                 document.getElementById("currentStudy"), document.getElementById("gpa"), 
-                document.getElementById("fieldOfStudy"), document.getElementById("country"), 
-                document.getElementById("finalStage")
+                document.getElementById("fieldOfStudy"), document.getElementById("country"), document.getElementById("finalStage")
             ];
 
             const studySubGroup = document.getElementById("studySubGroup");
@@ -169,33 +198,78 @@
             if (!scoreGroup.classList.contains("hidden")) requiredFields.push(document.getElementById("certScore"));
 
             let filled = 0;
-            requiredFields.forEach(el => {
-                if (el.value && el.value.trim() !== "" && el.value !== "N/A") filled++;
-            });
-
+            requiredFields.forEach(el => { if (el.value && el.value.trim() !== "" && el.value !== "N/A") filled++; });
             if (phoneInput.value.length >= 14) filled++;
 
             const totalFields = requiredFields.length + 1; 
             const isValid = (filled === totalFields);
 
-            tg.MainButton.setParams({ color: isValid ? "#007aff" : "#c4c4c6", is_active: isValid });
+            // Если finalPayload не пустой, значит мы на экране результата, кнопку не трогаем
+            if (!finalPayload) {
+                tg.MainButton.setParams({ color: isValid ? "#007aff" : "#c4c4c6", is_active: isValid, text: "YUBORISH" });
+            }
             document.getElementById('progressBar').style.width = (filled / totalFields * 100) + "%";
         }
 
         document.querySelectorAll('input, select').forEach(el => { el.addEventListener('input', validate); el.addEventListener('change', validate); });
         phoneInput.addEventListener('input', (e) => { if (!e.target.value.startsWith('+998 ')) e.target.value = '+998 '; validate(); });
 
-        tg.MainButton.onClick(() => {
-            tg.MainButton.showProgress();
-            tg.HapticFeedback.impactOccurred('medium');
+        // Генератор случайных чисел
+        function getRandom(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
+        // Главная логика
+        tg.MainButton.onClick(() => {
+            if (finalPayload) {
+                // ШАГ 2: Пользователь нажал "Batafsil ma'lumot olish", закрываем и отправляем
+                tg.sendData(JSON.stringify(finalPayload));
+                return;
+            }
+
+            // ШАГ 1: Показываем расчет
+            tg.HapticFeedback.impactOccurred('medium');
+            
             let finalStudyStatus = document.getElementById("currentStudy").value;
             const subStudy = document.getElementById("studySubSelect").value;
             if (subStudy && subStudy !== "N/A" && !document.getElementById("studySubGroup").classList.contains("hidden")) {
                 finalStudyStatus += ` (${subStudy})`;
             }
 
-            const d = {
+            // Читаем GPA (парсим число из строки)
+            let gpaStr = document.getElementById("gpa").value;
+            let gpaVal = parseFloat(gpaStr.replace(/[^0-9.]/g, ''));
+            if (isNaN(gpaVal)) gpaVal = 0;
+            if (gpaVal > 5) gpaVal = (gpaVal / 100) * 5; // Конвертируем % в шкалу 5.0
+
+            const hasCert = document.getElementById("certType").value !== "None";
+            const level = document.getElementById("finalStage").value; // Masters
+            
+            let prob = 0;
+            let msgText = "";
+
+            // --- СЦЕНАРИИ РАСЧЕТА ---
+            if (level === "Masters") {
+                if (gpaVal > 4.3) { prob = getRandom(85, 95); msgText = "Tabriklaymiz! Sizda Grant yutish va Chet el universitetiga kirish extimoli yuqori! Batafsil ma’lumot olish"; }
+                else if (gpaVal >= 3.0) { prob = getRandom(70, 85); msgText = "Yaxshi natija! Sizda imkoniyat bor."; }
+                else { prob = getRandom(10, 60); msgText = "O’zingni ustingdan ishla!"; }
+            } else {
+                if (!hasCert) {
+                    prob = getRandom(10, 20); msgText = "O’zingni ustingdan ishla!";
+                } else {
+                    if (gpaVal > 3.0) {
+                        if (subStudy === "9-sinf") { prob = getRandom(65, 75); msgText = "Ajoyib boshlanish! Yana ozgina harakat qiling."; }
+                        else if (subStudy === "10-sinf") { prob = getRandom(75, 85); msgText = "Ajoyib natija! Imkoniyatlaringiz juda yaxshi."; }
+                        else { 
+                            // 11-sinf, College, Bitirganlar
+                            prob = getRandom(75, 85); msgText = "Tabriklaymiz! Sizda Grant yutish va Chet el universitetiga kirish extimoli yuqori! Batafsil ma’lumot olish"; 
+                        }
+                    } else {
+                        prob = getRandom(30, 60); msgText = "Sertifikat borligi yaxshi, lekin GPA ni oshirish ustida ishlang!";
+                    }
+                }
+            }
+
+            // Сохраняем данные для отправки боту
+            finalPayload = {
                 name: document.getElementById("fullName").value,
                 dob: document.getElementById("dob").value,
                 phone: document.getElementById("phone").value,
@@ -205,10 +279,41 @@
                 score: document.getElementById("certScore").value === "N/A" ? "Yo'q" : document.getElementById("certScore").value,
                 field: document.getElementById("fieldOfStudy").value,
                 country: document.getElementById("country").value,
-                level: document.getElementById("finalStage").value
+                level: document.getElementById("finalStage").value,
+                probability: prob // ПЕРЕДАЕМ ПРОЦЕНТ АДМИНУ!
             };
 
-            tg.sendData(JSON.stringify(d));
+            // Запускаем экран анимации
+            document.getElementById("resultScreen").classList.add("active");
+            tg.MainButton.hide();
+
+            // Анимация бегущих цифр
+            let currentNum = 0;
+            let speed = 20; 
+            let interval = setInterval(() => {
+                currentNum++;
+                document.getElementById("percentNum").innerText = currentNum + "%";
+                tg.HapticFeedback.selectionChanged(); // Вибрация как тиканье часов
+                
+                if (currentNum >= prob) {
+                    clearInterval(interval);
+                    document.getElementById("resultText").innerText = msgText;
+                    document.getElementById("resultText").classList.add("show");
+                    
+                    // Меняем цвет круга в зависимости от процента
+                    if (prob < 30) document.getElementById("circleWrap").style.borderColor = "#ff3b30";
+                    else if (prob > 70) document.getElementById("circleWrap").style.borderColor = "#34c759";
+                    else document.getElementById("circleWrap").style.borderColor = "#ffcc00";
+
+                    tg.HapticFeedback.notificationOccurred(prob > 50 ? 'success' : 'warning');
+                    
+                    // Показываем кнопку для финальной отправки
+                    setTimeout(() => {
+                        tg.MainButton.setParams({ text: "Batafsil ma'lumot olish", color: "#34c759", is_active: true });
+                        tg.MainButton.show();
+                    }, 500);
+                }
+            }, speed);
         });
     </script>
 </body>
