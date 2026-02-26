@@ -14,9 +14,6 @@
             --tg-theme-hint-color: #8e8e93;
             --tg-theme-button-color: #007aff;
             --border-radius: 16px;
-            --success-color: #34c759;
-            --warning-color: #ffcc00;
-            --danger-color: #ff3b30;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); margin: 0; padding: 20px 16px; box-sizing: border-box; min-height: 100vh; overflow-x: hidden; }
         .progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 6px; background: rgba(0,0,0,0.05); z-index: 1000; }
@@ -34,7 +31,7 @@
         .ring-container { position: relative; width: 180px; height: 180px; margin-bottom: 30px; }
         .progress-ring { transform: rotate(-90deg); transform-origin: 50% 50%; }
         .progress-ring__circle-bg { stroke: var(--tg-theme-secondary-bg-color); }
-        .progress-ring__circle { stroke: var(--tg-theme-button-color); transition: stroke-dashoffset 0.3s ease, stroke 0.5s ease; }
+        .progress-ring__circle { stroke: var(--tg-theme-button-color); transition: stroke-dashoffset 0.1s linear, stroke 0.5s ease; }
         .circle-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
         .percent-num { font-size: 48px; font-weight: 800; color: var(--tg-theme-text-color); }
         .percent-label { font-size: 14px; font-weight: 600; color: var(--tg-theme-hint-color); margin-top: -5px; }
@@ -74,24 +71,28 @@
         <h2>Sertifikat va Yo'nalish 🌍</h2>
         <div class="card">
             <div class="form-group">
-                <label>Til sertifikati 📜</label>
+                <label>Sertifikat turi 📜</label>
                 <select id="certType" onchange="toggleCertOptions()">
                     <option value="None">Mavjud emas</option>
                     <option value="IELTS">IELTS</option>
                     <option value="TOEFL">TOEFL</option>
                     <option value="Nemis tili sertifikati">Nemis tili sertifikati</option>
+                    <option value="SAT">SAT</option>
                 </select>
             </div>
+            
             <div class="form-group hidden" id="scoreGroup">
-                <label>Sertifikat darajasi 🎯</label>
-                <select id="certScore" onchange="validate()">
+                <label id="scoreLabel">Sertifikat darajasi 🎯</label>
+                <select id="certScoreSelect" onchange="validate()">
                     <option value="" disabled selected>Tanlang...</option>
                     <option value="B1">B1</option>
                     <option value="B2">B2</option>
                     <option value="C1">C1</option>
                     <option value="C2">C2</option>
                 </select>
+                <input type="text" id="certScoreInput" class="hidden" inputmode="numeric" placeholder="Masalan: 1450">
             </div>
+
             <div class="form-group"><label>Tanlangan soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes..."></div>
             <div class="form-group">
                 <label>Qaysi davlatga? ✈️</label>
@@ -117,7 +118,7 @@
         <div class="ring-container">
             <svg class="progress-ring" width="180" height="180">
                <circle class="progress-ring__circle-bg" stroke-width="12" fill="transparent" r="80" cx="90" cy="90"/>
-               <circle class="progress-ring__circle" stroke-width="12" fill="transparent" r="80" cx="90" cy="90"/>
+               <circle id="animCircle" class="progress-ring__circle" stroke-width="12" fill="transparent" r="80" cx="90" cy="90"/>
             </svg>
             <div class="circle-content"><div class="percent-num" id="percentNum">0%</div><div class="percent-label">Imkoniyat</div></div>
         </div>
@@ -132,60 +133,69 @@
 
         let finalPayload = null;
 
-        const circle = document.querySelector('.progress-ring__circle');
-        const radius = circle.r.baseVal.value;
+        // Бронебойная настройка SVG кольца (Радиус жестко задан = 80)
+        const radius = 80;
         const circumference = radius * 2 * Math.PI;
+        const circle = document.getElementById('animCircle');
         circle.style.strokeDasharray = `${circumference} ${circumference}`;
         circle.style.strokeDashoffset = circumference;
 
         function setProgress(percent) {
             const offset = circumference - (percent / 100 * circumference);
             circle.style.strokeDashoffset = offset;
-            let color = getComputedStyle(document.documentElement).getPropertyValue('--tg-theme-button-color');
-            if (percent < 30) color = 'var(--danger-color)';
-            else if (percent > 70) color = 'var(--success-color)';
-            else color = 'var(--warning-color)';
-            circle.style.stroke = color;
+            
+            // Жестко заданные цвета
+            if (percent < 30) circle.style.stroke = '#ff3b30'; // Красный
+            else if (percent > 70) circle.style.stroke = '#34c759'; // Зеленый
+            else circle.style.stroke = '#ffcc00'; // Желтый
         }
 
-        // --- УМНЫЕ МАСКИ ВВОДА ---
+        // Защищенная функция вибрации
+        function safeVibrate(type) {
+            try {
+                if (type === 'tick' && tg.HapticFeedback.selectionChanged) tg.HapticFeedback.selectionChanged();
+                else if (type === 'success' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('success');
+                else if (type === 'warning' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('warning');
+                else if (type === 'error' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('error');
+                else if (type === 'medium' && tg.HapticFeedback.impactOccurred) tg.HapticFeedback.impactOccurred('medium');
+            } catch (e) { console.log("Haptic failed", e); }
+        }
 
-        // 1. Авто-заглавные буквы для имени
+        // --- МАСКИ ВВОДА ---
         const nameInput = document.getElementById('fullName');
         nameInput.addEventListener('input', function(e) {
-            let start = this.selectionStart;
-            let val = this.value;
+            let start = this.selectionStart; let val = this.value;
             this.value = val.replace(/(^\w|\s\w)/g, m => m.toUpperCase());
-            this.setSelectionRange(start, start); // Сохраняем позицию курсора
-            validate();
+            this.setSelectionRange(start, start); validate();
         });
 
-        // 2. Маска для Даты Рождения (DD.MM.YYYY)
         const dobInput = document.getElementById('dob');
         dobInput.addEventListener('input', function(e) {
-            let input = this.value.replace(/\D/g, ''); // Удаляем всё кроме цифр
-            if (input.length > 8) input = input.substring(0, 8); // Максимум 8 цифр
+            let input = this.value.replace(/\D/g, ''); 
+            if (input.length > 8) input = input.substring(0, 8); 
             let formatted = input;
             if (input.length > 2) formatted = input.substring(0, 2) + '.' + input.substring(2);
             if (input.length > 4) formatted = formatted.substring(0, 5) + '.' + input.substring(4);
-            this.value = formatted;
-            validate();
+            this.value = formatted; validate();
         });
 
-        // 3. Красивая маска для телефона (+998 (XX) XXX-XX-XX)
         const phoneInput = document.getElementById('phone');
         phoneInput.addEventListener('input', function(e) {
-            let input = this.value.replace(/\D/g, ''); // Оставляем только цифры
-            if (!input.startsWith('998')) input = '998' + input.replace(/^998/, ''); // Защита префикса
-            if (input.length > 12) input = input.substring(0, 12); // Ограничение длины
-
+            let input = this.value.replace(/\D/g, ''); 
+            if (!input.startsWith('998')) input = '998' + input.replace(/^998/, ''); 
+            if (input.length > 12) input = input.substring(0, 12); 
             let formatted = '+998 ';
             if (input.length > 3) formatted += '(' + input.substring(3, 5);
             if (input.length > 5) formatted += ') ' + input.substring(5, 8);
             if (input.length > 8) formatted += '-' + input.substring(8, 10);
             if (input.length > 10) formatted += '-' + input.substring(10, 12);
-            
-            this.value = formatted;
+            this.value = formatted; validate();
+        });
+
+        const satInput = document.getElementById('certScoreInput');
+        satInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length > 4) this.value = this.value.substring(0, 4);
             validate();
         });
 
@@ -205,9 +215,30 @@
         function toggleCertOptions() {
             const val = document.getElementById("certType").value;
             const scoreGroup = document.getElementById("scoreGroup");
-            const scoreSelect = document.getElementById("certScore");
-            if (val === "None") { scoreGroup.classList.add("hidden"); scoreSelect.value = "N/A"; } 
-            else { scoreGroup.classList.remove("hidden"); if (scoreSelect.value === "N/A") scoreSelect.value = ""; }
+            const scoreSelect = document.getElementById("certScoreSelect");
+            const scoreInput = document.getElementById("certScoreInput");
+            const scoreLabel = document.getElementById("scoreLabel");
+
+            if (val === "None") { 
+                scoreGroup.classList.add("hidden"); 
+                scoreSelect.value = "N/A"; 
+                scoreInput.value = "N/A";
+            } else { 
+                scoreGroup.classList.remove("hidden"); 
+                if (val === "SAT") {
+                    scoreLabel.innerText = "SAT balingiz 🎯";
+                    scoreSelect.classList.add("hidden");
+                    scoreInput.classList.remove("hidden");
+                    scoreSelect.value = "N/A";
+                    if (scoreInput.value === "N/A") scoreInput.value = "";
+                } else {
+                    scoreLabel.innerText = "Sertifikat darajasi 🎯";
+                    scoreInput.classList.add("hidden");
+                    scoreSelect.classList.remove("hidden");
+                    scoreInput.value = "N/A";
+                    if (scoreSelect.value === "N/A") scoreSelect.value = "";
+                }
+            }
             validate();
         }
 
@@ -220,17 +251,20 @@
             
             const studySubGroup = document.getElementById("studySubGroup");
             if (!studySubGroup.classList.contains("hidden")) requiredFields.push(document.getElementById("studySubSelect"));
+            
             const scoreGroup = document.getElementById("scoreGroup");
-            if (!scoreGroup.classList.contains("hidden")) requiredFields.push(document.getElementById("certScore"));
+            if (!scoreGroup.classList.contains("hidden")) {
+                if (document.getElementById("certType").value === "SAT") requiredFields.push(document.getElementById("certScoreInput"));
+                else requiredFields.push(document.getElementById("certScoreSelect"));
+            }
 
             let filled = 0;
             requiredFields.forEach(el => { if (el.value && el.value.trim() !== "" && el.value !== "N/A") filled++; });
             
-            // Проверка новых масок: Дата должна быть 10 символов (DD.MM.YYYY), Телефон - 19 символов
             if (dobInput.value.length === 10) filled++;
             if (phoneInput.value.length === 19) filled++;
 
-            const totalFields = requiredFields.length + 2; // +2 за дату и телефон
+            const totalFields = requiredFields.length + 2; 
             const isValid = (filled === totalFields);
 
             if (!finalPayload) tg.MainButton.setParams({ color: isValid ? "#007aff" : "#c4c4c6", is_active: isValid, text: "YUBORISH" });
@@ -242,7 +276,7 @@
 
         tg.MainButton.onClick(() => {
             if (finalPayload) { tg.sendData(JSON.stringify(finalPayload)); return; }
-            tg.HapticFeedback.impactOccurred('medium');
+            safeVibrate('medium');
             
             let finalStudyStatus = document.getElementById("currentStudy").value;
             const subStudy = document.getElementById("studySubSelect").value;
@@ -253,11 +287,25 @@
             if (isNaN(gpaVal)) gpaVal = 0;
             if (gpaVal > 5) gpaVal = (gpaVal / 100) * 5;
 
-            const hasCert = document.getElementById("certType").value !== "None";
+            const certType = document.getElementById("certType").value;
+            let certScore = "";
+            if (certType === "SAT") certScore = document.getElementById("certScoreInput").value;
+            else if (certType !== "None") certScore = document.getElementById("certScoreSelect").value;
+            else certScore = "Yo'q";
+
+            const hasCert = certType !== "None";
             const level = document.getElementById("finalStage").value;
+            
             let prob = 0; let msgText = "";
 
-            if (level === "Masters") {
+            if (level === "Bachelors" && certType === "SAT") {
+                let satVal = parseInt(certScore) || 0;
+                if (satVal >= 1400) { prob = 90; msgText = "Tabriklaymiz! Sizda Grant yutish va Chet el universitetiga kirish extimoli juda yuqori! Batafsil ma’lumot olish"; }
+                else if (satVal >= 1200) { prob = 85; msgText = "Ajoyib natija! Imkoniyatlaringiz juda yaxshi."; }
+                else if (satVal >= 1000) { prob = 80; msgText = "Yaxshi natija! Sizda imkoniyat bor."; }
+                else { prob = 70; msgText = "Sertifikat borligi yaxshi, lekin balingizni oshirish ustida ishlang!"; }
+            } 
+            else if (level === "Masters") {
                 if (gpaVal > 4.3) { prob = getRandom(85, 95); msgText = "Tabriklaymiz! Sizda Grant yutish va Chet el universitetiga kirish extimoli yuqori! Batafsil ma’lumot olish"; }
                 else if (gpaVal >= 3.0) { prob = getRandom(70, 85); msgText = "Yaxshi natija! Sizda imkoniyat bor."; }
                 else { prob = getRandom(10, 60); msgText = "O’zingni ustingdan ishla!"; }
@@ -278,8 +326,8 @@
                 phone: document.getElementById("phone").value,
                 study: finalStudyStatus,
                 gpa: document.getElementById("gpa").value,
-                cert: document.getElementById("certType").value,
-                score: document.getElementById("certScore").value === "N/A" ? "Yo'q" : document.getElementById("certScore").value,
+                cert: certType,
+                score: certScore,
                 field: document.getElementById("fieldOfStudy").value,
                 country: document.getElementById("country").value,
                 level: document.getElementById("finalStage").value,
@@ -290,21 +338,23 @@
             tg.MainButton.hide();
 
             let currentNum = 0;
-            let speed = 20; 
+            let speed = 25; // Чуть замедлил для плавности
+            
             let interval = setInterval(() => {
                 currentNum++;
                 document.getElementById("percentNum").innerText = currentNum + "%";
                 setProgress(currentNum);
-                tg.HapticFeedback.selectionChanged();
+                safeVibrate('tick');
                 
                 if (currentNum >= prob) {
                     clearInterval(interval);
                     document.getElementById("resultText").innerText = msgText;
                     document.getElementById("resultText").classList.add("show");
-                    if (prob > 75) {
-                        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-                        tg.HapticFeedback.notificationOccurred('success');
-                    } else { tg.HapticFeedback.notificationOccurred(prob > 40 ? 'warning' : 'error'); }
+                    
+                    if (prob >= 75) {
+                        try { if (window.confetti) confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } }); } catch(e){}
+                        safeVibrate('success');
+                    } else { safeVibrate(prob > 40 ? 'warning' : 'error'); }
                     
                     setTimeout(() => {
                         tg.MainButton.setParams({ text: "Batafsil ma'lumot olish", color: "#34c759", is_active: true });
