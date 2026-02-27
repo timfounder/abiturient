@@ -178,7 +178,6 @@
             } catch (e) {}
         }
 
-        // --- ГЕНЕРАЦИЯ ДАТ РОЖДЕНИЯ ---
         const dobDay = document.getElementById('dobDay');
         for(let i=1; i<=31; i++) {
             let val = i < 10 ? '0'+i : i;
@@ -199,7 +198,6 @@
             dobYear.innerHTML += `<option value="${i}">${i}</option>`;
         }
 
-        // --- МАСКИ ВВОДА ---
         const nameInput = document.getElementById('fullName');
         nameInput.addEventListener('input', function(e) {
             let start = this.selectionStart; let val = this.value;
@@ -232,16 +230,13 @@
             const study = document.getElementById("currentStudy").value;
             const subGroup = document.getElementById("studySubGroup");
             const subSelect = document.getElementById("studySubSelect");
-            
             const finalStage = document.getElementById("finalStage");
             const mastersOption = finalStage.querySelector('option[value="Masters"]');
             
             if (["Universitet talabasiman", "Universitetni bitirganman"].includes(study)) {
-                mastersOption.disabled = false;
-                mastersOption.hidden = false;
+                mastersOption.disabled = false; mastersOption.hidden = false;
             } else {
-                mastersOption.disabled = true;
-                mastersOption.hidden = true;
+                mastersOption.disabled = true; mastersOption.hidden = true;
                 if (finalStage.value === "Masters") finalStage.value = ""; 
             }
 
@@ -286,16 +281,9 @@
                 }
             };
 
-            checkField("fullName");
-            checkField("currentStudy");
-            checkField("gpa");
-            checkField("fieldOfStudy");
-            checkField("country");
-            checkField("finalStage");
-            
-            checkField("dobDay");
-            checkField("dobMonth");
-            checkField("dobYear");
+            checkField("fullName"); checkField("currentStudy"); checkField("gpa");
+            checkField("fieldOfStudy"); checkField("country"); checkField("finalStage");
+            checkField("dobDay"); checkField("dobMonth"); checkField("dobYear");
 
             if (!document.getElementById("studySubGroup").classList.contains("hidden")) checkField("studySubSelect");
             if (!document.getElementById("scoreGroup").classList.contains("hidden")) checkField("certScoreSelect");
@@ -306,14 +294,9 @@
             if (phoneDigits >= 12) filledCount++; else isValid = false;
 
             if (!finalPayload) {
-                tg.MainButton.setParams({ 
-                    color: isValid ? "#007aff" : "#c4c4c6", 
-                    is_active: isValid, 
-                    text: "YUBORISH" 
-                });
+                tg.MainButton.setParams({ color: isValid ? "#007aff" : "#c4c4c6", is_active: isValid, text: "YUBORISH" });
                 if (isValid) tg.MainButton.show();
             }
-            
             document.getElementById('progressBar').style.width = (filledCount / totalCount * 100) + "%";
         }
 
@@ -321,16 +304,14 @@
         function getRandom(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
         tg.MainButton.onClick(() => {
+            // --- ВТОРОЕ НАЖАТИЕ: Открываем ТГ-ссылку и мягко закрываем аппку ---
             if (finalPayload) { 
-                if (window.targetBtnLink) {
-                    tg.openTelegramLink(window.targetBtnLink);
-                }
-                setTimeout(() => {
-                    tg.sendData(JSON.stringify(finalPayload)); 
-                }, 100);
+                if (window.targetBtnLink) { tg.openTelegramLink(window.targetBtnLink); }
+                setTimeout(() => { tg.close(); }, 100); 
                 return; 
             }
             
+            // --- ПЕРВОЕ НАЖАТИЕ: Расчет и ФОНОВАЯ ОТПРАВКА ---
             safeVibrate('medium');
             
             let finalStudyStatus = document.getElementById("currentStudy").value;
@@ -339,8 +320,7 @@
 
             let gpaStr = document.getElementById("gpa").value;
             let gpaVal = parseFloat(gpaStr.replace(/[^0-9.]/g, ''));
-            if (isNaN(gpaVal)) gpaVal = 0;
-            if (gpaVal > 5) gpaVal = (gpaVal / 100) * 5;
+            if (isNaN(gpaVal)) gpaVal = 0; if (gpaVal > 5) gpaVal = (gpaVal / 100) * 5;
 
             const certType = document.getElementById("certType").value;
             const certScore = (certType === "None") ? "Yo'q" : document.getElementById("certScoreSelect").value;
@@ -352,7 +332,6 @@
 
             const level = document.getElementById("finalStage").value;
             const country = document.getElementById("country").value;
-            
             const finalDobStr = `${document.getElementById("dobDay").value}.${document.getElementById("dobMonth").value}.${document.getElementById("dobYear").value}`;
             
             let prob = 0; 
@@ -360,74 +339,63 @@
 
             if (useSatLogic) {
                 let satVal = parseInt(satScoreInput) || 0;
-                if (satVal >= 1400) prob = 90;
-                else if (satVal >= 1200) prob = 85;
-                else if (satVal >= 1000) prob = 80;
-                else prob = 70;
-            } 
-            else if (level === "Masters") {
-                if (gpaVal > 4.3) prob = getRandom(85, 95);
-                else if (gpaVal >= 3.0) prob = getRandom(70, 85);
-                else prob = getRandom(10, 60);
+                if (satVal >= 1400) prob = 90; else if (satVal >= 1200) prob = 85; else if (satVal >= 1000) prob = 80; else prob = 70;
+            } else if (level === "Masters") {
+                if (gpaVal > 4.3) prob = getRandom(85, 95); else if (gpaVal >= 3.0) prob = getRandom(70, 85); else prob = getRandom(10, 60);
             } else {
                 if (!hasCert) prob = getRandom(10, 20);
                 else {
                     if (gpaVal > 3.0) {
-                        if (subStudy === "9-sinf") prob = getRandom(65, 75);
-                        else if (subStudy === "10-sinf") prob = getRandom(75, 85);
-                        else prob = getRandom(75, 85);
+                        if (subStudy === "9-sinf") prob = getRandom(65, 75); else if (subStudy === "10-sinf") prob = getRandom(75, 85); else prob = getRandom(75, 85);
                     } else prob = getRandom(30, 60);
                 }
             }
 
-            // --- НОВАЯ ЛОГИКА ТЕКСТОВ И КНОПОК: ВСЕ, КТО >= 65% ИДУТ К АДМИНУ ---
-            let msgText = "";
-            let btnText = "";
-            window.targetBtnLink = "";
-
+            let msgText = ""; let btnText = ""; window.targetBtnLink = "";
             if (prob >= 65) {
                 msgText = "Sizda katta potensial bor chempion. Agar to’g’ri strategiya bilan topshirsangiz aniq shu yil o’qishga kira olasiz. 🤩";
-                btnText = "Batafsil ma'lumot olish";
-                window.targetBtnLink = "https://t.me/GID_admin1"; 
+                btnText = "Batafsil ma'lumot olish"; window.targetBtnLink = "https://t.me/GID_admin1"; 
             } else {
                 msgText = "Sizda katta imkoniyat bor, faqat natijangiz ustida ozroq ishlashimiz kerak chempion. Kanalda bepul strategiyani qo’lga kiriting va orzuyingizga erishing! 💪";
-                btnText = "Kanalga a'zo bo'lish!";
-                window.targetBtnLink = "https://t.me/Muhammadkhuja_org"; 
+                btnText = "Kanalga a'zo bo'lish!"; window.targetBtnLink = "https://t.me/Muhammadkhuja_org"; 
             }
 
-            let finalCertStr = certType;
-            let finalScoreStr = certScore;
-
+            let finalCertStr = certType; let finalScoreStr = certScore;
             if (hasSat) {
                 if (finalCertStr === "None") { finalCertStr = "SAT"; finalScoreStr = satScoreInput; } 
                 else { finalCertStr += " + SAT"; finalScoreStr += ` | SAT: ${satScoreInput}`; }
             }
 
+            // Получаем юзернейм прямо из Telegram Mini App
+            let tgUsername = "Kiritilmagan";
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username) {
+                tgUsername = tg.initDataUnsafe.user.username;
+            }
+
             finalPayload = {
-                name: document.getElementById("fullName").value,
-                dob: finalDobStr,
-                phone: document.getElementById("phone").value,
-                study: finalStudyStatus,
-                gpa: document.getElementById("gpa").value,
-                cert: finalCertStr,
-                score: finalScoreStr,
-                field: document.getElementById("fieldOfStudy").value,
-                country: country,
-                level: level,
-                probability: prob
+                name: document.getElementById("fullName").value, dob: finalDobStr, phone: document.getElementById("phone").value,
+                study: finalStudyStatus, gpa: document.getElementById("gpa").value, cert: finalCertStr, score: finalScoreStr,
+                field: document.getElementById("fieldOfStudy").value, country: country, level: level, probability: prob,
+                username: tgUsername
             };
 
+            // 🔥 МАГИЯ: Скрытая отправка данных в Google Sheet БЕЗ закрытия приложения
+            const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbxnet8ErUY23dtv21IyryT1OZe7PdJvL4gIGhPLTnpoG2NqcJJN13NnAhbkU9qitLmg/exec";
+            fetch(GOOGLE_SHEET_URL, {
+                method: "POST", mode: "no-cors",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(finalPayload)
+            }).catch(e => console.log("Fonda yuborishda xatolik: ", e));
+
+            // Запускаем красивую анимацию
             document.getElementById("resultScreen").classList.add("active");
             tg.MainButton.hide();
 
-            let currentNum = 0;
-            let speed = 25; 
-            
+            let currentNum = 0; let speed = 25; 
             let interval = setInterval(() => {
                 currentNum++;
                 document.getElementById("percentNum").innerText = currentNum + "%";
-                setProgress(currentNum);
-                safeVibrate('tick');
+                setProgress(currentNum); safeVibrate('tick');
                 
                 if (currentNum >= prob) {
                     clearInterval(interval);
@@ -439,10 +407,7 @@
                         safeVibrate('success');
                     } else { safeVibrate(prob > 40 ? 'warning' : 'error'); }
                     
-                    setTimeout(() => {
-                        tg.MainButton.setParams({ text: btnText, color: "#34c759", is_active: true });
-                        tg.MainButton.show();
-                    }, 500);
+                    setTimeout(() => { tg.MainButton.setParams({ text: btnText, color: "#34c759", is_active: true }); tg.MainButton.show(); }, 500);
                 }
             }, speed);
         });
