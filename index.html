@@ -38,7 +38,6 @@
         .circle-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
         .percent-num { font-size: 48px; font-weight: 800; color: var(--tg-theme-text-color); }
         .percent-label { font-size: 14px; font-weight: 600; color: var(--tg-theme-hint-color); margin-top: -5px; }
-        /* Шрифт уменьшен до 17px, чтобы длинный текст красиво ложился на экран */
         .result-text { font-size: 17px; font-weight: 600; text-align: center; padding: 0 24px; line-height: 1.5; opacity: 0; transition: opacity 0.5s ease; transform: translateY(20px); }
         .result-text.show { opacity: 1; transform: translateY(0); }
     </style>
@@ -322,20 +321,16 @@
         function getRandom(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
         tg.MainButton.onClick(() => {
-            // ВТОРОЕ НАЖАТИЕ (На экране результатов)
             if (finalPayload) { 
-                // Сначала открываем нужную ссылку в Telegram
                 if (window.targetBtnLink) {
                     tg.openTelegramLink(window.targetBtnLink);
                 }
-                // Через долю секунды отправляем данные в бот и закрываем форму
                 setTimeout(() => {
                     tg.sendData(JSON.stringify(finalPayload)); 
                 }, 100);
                 return; 
             }
             
-            // ПЕРВОЕ НАЖАТИЕ (Кнопка отправки формы)
             safeVibrate('medium');
             
             let finalStudyStatus = document.getElementById("currentStudy").value;
@@ -363,7 +358,6 @@
             let prob = 0; 
             let useSatLogic = (level === "Bachelors" && hasSat && country !== "Germaniya");
 
-            // --- МАТЕМАТИКА ВЕРОЯТНОСТИ ---
             if (useSatLogic) {
                 let satVal = parseInt(satScoreInput) || 0;
                 if (satVal >= 1400) prob = 90;
@@ -386,21 +380,19 @@
                 }
             }
 
-            // --- НОВАЯ ЛОГИКА ТЕКСТОВ И КНОПОК ВОРОНКИ ПРОДАЖ ---
+            // --- НОВАЯ ЛОГИКА ТЕКСТОВ И КНОПОК: ВСЕ, КТО >= 65% ИДУТ К АДМИНУ ---
             let msgText = "";
             let btnText = "";
             window.targetBtnLink = "";
 
-            // Проверяем, уровень языка выше B2 (то есть C1 или C2) И вероятность больше 75%
-            if ((certScore === "C1" || certScore === "C2") && prob > 75) {
+            if (prob >= 65) {
                 msgText = "Sizda katta potensial bor chempion. Agar to’g’ri strategiya bilan topshirsangiz aniq shu yil o’qishga kira olasiz. 🤩";
                 btnText = "Batafsil ma'lumot olish";
-                window.targetBtnLink = "https://t.me/GID_admin1"; // Переход в личку
+                window.targetBtnLink = "https://t.me/GID_admin1"; 
             } else {
-                // Все остальные сценарии (слабые баллы, нет сертификата, 9 класс и т.д.)
                 msgText = "Sizda katta imkoniyat bor, faqat natijangiz ustida ozroq ishlashimiz kerak chempion. Kanalda bepul strategiyani qo’lga kiriting va orzuyingizga erishing! 💪";
                 btnText = "Kanalga a'zo bo'lish!";
-                window.targetBtnLink = "https://t.me/Muhammadkhuja_org"; // Переход в канал
+                window.targetBtnLink = "https://t.me/Muhammadkhuja_org"; 
             }
 
             let finalCertStr = certType;
