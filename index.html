@@ -38,7 +38,8 @@
         .circle-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
         .percent-num { font-size: 48px; font-weight: 800; color: var(--tg-theme-text-color); }
         .percent-label { font-size: 14px; font-weight: 600; color: var(--tg-theme-hint-color); margin-top: -5px; }
-        .result-text { font-size: 20px; font-weight: 600; text-align: center; padding: 0 24px; line-height: 1.4; opacity: 0; transition: opacity 0.5s ease; transform: translateY(20px); }
+        /* Шрифт уменьшен до 17px, чтобы длинный текст красиво ложился на экран */
+        .result-text { font-size: 17px; font-weight: 600; text-align: center; padding: 0 24px; line-height: 1.5; opacity: 0; transition: opacity 0.5s ease; transform: translateY(20px); }
         .result-text.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
@@ -233,7 +234,6 @@
             const subGroup = document.getElementById("studySubGroup");
             const subSelect = document.getElementById("studySubSelect");
             
-            // Логика блокировки Masters (Magistr) ТОЛЬКО для тех, кто НЕ из Университета
             const finalStage = document.getElementById("finalStage");
             const mastersOption = finalStage.querySelector('option[value="Masters"]');
             
@@ -243,7 +243,7 @@
             } else {
                 mastersOption.disabled = true;
                 mastersOption.hidden = true;
-                if (finalStage.value === "Masters") finalStage.value = ""; // Сбрасываем выбор, если был выбран Магистр
+                if (finalStage.value === "Masters") finalStage.value = ""; 
             }
 
             subSelect.innerHTML = '<option value="" disabled selected>Tanlang...</option>';
@@ -272,7 +272,6 @@
             validate();
         }
 
-        // --- БЕЗОТКАЗНАЯ ВАЛИДАЦИЯ ---
         function validate() {
             let isValid = true;
             let filledCount = 0;
@@ -323,7 +322,20 @@
         function getRandom(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
         tg.MainButton.onClick(() => {
-            if (finalPayload) { tg.sendData(JSON.stringify(finalPayload)); return; }
+            // ВТОРОЕ НАЖАТИЕ (На экране результатов)
+            if (finalPayload) { 
+                // Сначала открываем нужную ссылку в Telegram
+                if (window.targetBtnLink) {
+                    tg.openTelegramLink(window.targetBtnLink);
+                }
+                // Через долю секунды отправляем данные в бот и закрываем форму
+                setTimeout(() => {
+                    tg.sendData(JSON.stringify(finalPayload)); 
+                }, 100);
+                return; 
+            }
+            
+            // ПЕРВОЕ НАЖАТИЕ (Кнопка отправки формы)
             safeVibrate('medium');
             
             let finalStudyStatus = document.getElementById("currentStudy").value;
@@ -348,42 +360,55 @@
             
             const finalDobStr = `${document.getElementById("dobDay").value}.${document.getElementById("dobMonth").value}.${document.getElementById("dobYear").value}`;
             
-            let prob = 0; let msgText = "";
+            let prob = 0; 
             let useSatLogic = (level === "Bachelors" && hasSat && country !== "Germaniya");
 
+            // --- МАТЕМАТИКА ВЕРОЯТНОСТИ ---
             if (useSatLogic) {
                 let satVal = parseInt(satScoreInput) || 0;
-                if (satVal >= 1400) { prob = 90; msgText = "Tabriklaymiz! Sizda Grant yutish va Chet el universitetiga kirish extimoli juda yuqori! Batafsil ma’lumot olish"; }
-                else if (satVal >= 1200) { prob = 85; msgText = "Ajoyib natija! Imkoniyatlaringiz juda yaxshi."; }
-                else if (satVal >= 1000) { prob = 80; msgText = "Yaxshi natija! Sizda imkoniyat bor."; }
-                else { prob = 70; msgText = "Sertifikat borligi yaxshi, lekin balingizni oshirish ustida ishlang!"; }
+                if (satVal >= 1400) prob = 90;
+                else if (satVal >= 1200) prob = 85;
+                else if (satVal >= 1000) prob = 80;
+                else prob = 70;
             } 
             else if (level === "Masters") {
-                if (gpaVal > 4.3) { prob = getRandom(85, 95); msgText = "Tabriklaymiz! Sizda Grant yutish va Chet el universitetiga kirish extimoli yuqori! Batafsil ma’lumot olish"; }
-                else if (gpaVal >= 3.0) { prob = getRandom(70, 85); msgText = "Yaxshi natija! Sizda imkoniyat bor."; }
-                else { prob = getRandom(10, 60); msgText = "O’zingni ustingdan ishla!"; }
+                if (gpaVal > 4.3) prob = getRandom(85, 95);
+                else if (gpaVal >= 3.0) prob = getRandom(70, 85);
+                else prob = getRandom(10, 60);
             } else {
-                if (!hasCert) { prob = getRandom(10, 20); msgText = "O’zingni ustingdan ishla!"; } 
+                if (!hasCert) prob = getRandom(10, 20);
                 else {
                     if (gpaVal > 3.0) {
-                        if (subStudy === "9-sinf") { prob = getRandom(65, 75); msgText = "Ajoyib boshlanish! Yana ozgina harakat qiling."; }
-                        else if (subStudy === "10-sinf") { prob = getRandom(75, 85); msgText = "Ajoyib natija! Imkoniyatlaringiz juda yaxshi."; }
-                        else { prob = getRandom(75, 85); msgText = "Tabriklaymiz! Sizda Grant yutish va Chet el universitetiga kirish extimoli yuqori! Batafsil ma’lumot olish"; }
-                    } else { prob = getRandom(30, 60); msgText = "Sertifikat borligi yaxshi, lekin GPA ni oshirish ustida ishlang!"; }
+                        if (subStudy === "9-sinf") prob = getRandom(65, 75);
+                        else if (subStudy === "10-sinf") prob = getRandom(75, 85);
+                        else prob = getRandom(75, 85);
+                    } else prob = getRandom(30, 60);
                 }
+            }
+
+            // --- НОВАЯ ЛОГИКА ТЕКСТОВ И КНОПОК ВОРОНКИ ПРОДАЖ ---
+            let msgText = "";
+            let btnText = "";
+            window.targetBtnLink = "";
+
+            // Проверяем, уровень языка выше B2 (то есть C1 или C2) И вероятность больше 75%
+            if ((certScore === "C1" || certScore === "C2") && prob > 75) {
+                msgText = "Sizda katta potensial bor chempion. Agar to’g’ri strategiya bilan topshirsangiz aniq shu yil o’qishga kira olasiz. 🤩";
+                btnText = "Batafsil ma'lumot olish";
+                window.targetBtnLink = "https://t.me/GID_admin1"; // Переход в личку
+            } else {
+                // Все остальные сценарии (слабые баллы, нет сертификата, 9 класс и т.д.)
+                msgText = "Sizda katta imkoniyat bor, faqat natijangiz ustida ozroq ishlashimiz kerak chempion. Kanalda bepul strategiyani qo’lga kiriting va orzuyingizga erishing! 💪";
+                btnText = "Kanalga a'zo bo'lish!";
+                window.targetBtnLink = "https://t.me/Muhammadkhuja_org"; // Переход в канал
             }
 
             let finalCertStr = certType;
             let finalScoreStr = certScore;
 
             if (hasSat) {
-                if (finalCertStr === "None") {
-                    finalCertStr = "SAT";
-                    finalScoreStr = satScoreInput;
-                } else {
-                    finalCertStr += " + SAT";
-                    finalScoreStr += ` | SAT: ${satScoreInput}`;
-                }
+                if (finalCertStr === "None") { finalCertStr = "SAT"; finalScoreStr = satScoreInput; } 
+                else { finalCertStr += " + SAT"; finalScoreStr += ` | SAT: ${satScoreInput}`; }
             }
 
             finalPayload = {
@@ -423,7 +448,7 @@
                     } else { safeVibrate(prob > 40 ? 'warning' : 'error'); }
                     
                     setTimeout(() => {
-                        tg.MainButton.setParams({ text: "Batafsil ma'lumot olish", color: "#34c759", is_active: true });
+                        tg.MainButton.setParams({ text: btnText, color: "#34c759", is_active: true });
                         tg.MainButton.show();
                     }, 500);
                 }
