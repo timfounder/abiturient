@@ -66,6 +66,31 @@
             100% { transform: translate(-3%, -3%) rotate(2deg); }
         }
 
+        /* === SKELETON LOADING === */
+        #skeletonScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: var(--bg-primary); z-index: 3000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        #skeletonScreen.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+        .skeleton-content { width: 85%; max-width: 400px; }
+        .skeleton-block {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-input) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 16px; margin-bottom: 16px;
+        }
+        .skeleton-hero { height: 120px; border-radius: 20px; margin-bottom: 24px; }
+        .skeleton-label { height: 12px; width: 40%; border-radius: 6px; margin-bottom: 10px; }
+        .skeleton-input { height: 48px; border-radius: 14px; margin-bottom: 18px; }
+        .skeleton-card { height: 180px; border-radius: 20px; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .skeleton-logo {
+            width: 56px; height: 56px; border-radius: 16px; background: var(--gradient-accent);
+            opacity: 0.3; margin: 0 auto 16px;
+            animation: shimmer 1.5s infinite, skPulse 2s ease-in-out infinite;
+        }
+        @keyframes skPulse { 0%,100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.05); opacity: 0.5; } }
+
         /* === Progress bar === */
         .progress-container {
             position: fixed;
@@ -89,12 +114,20 @@
 
         /* === Main content === */
         #formContainer {
-            position: relative;
-            z-index: 1;
-            padding: 16px 16px 100px;
-            max-width: 480px;
-            margin: 0 auto;
+            position: relative; z-index: 1; padding: 16px 16px 100px;
+            max-width: 480px; margin: 0 auto;
+            opacity: 0; transform: translateY(10px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
         }
+        #formContainer.loaded { opacity: 1; transform: translateY(0); }
+
+        /* === Section reveal === */
+        .form-section {
+            opacity: 0; transform: translateY(24px);
+            transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: none;
+        }
+        .form-section.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
 
         /* === Hero header === */
         .hero {
@@ -186,26 +219,35 @@
         }
 
         /* === Form groups === */
-        .form-group {
-            margin-bottom: 18px;
-            transition: all 0.3s ease;
-        }
-
+        .form-group { margin-bottom: 18px; transition: all 0.3s ease; position: relative; }
         .form-group:last-child { margin-bottom: 0; }
 
         label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-            transition: color 0.3s ease;
+            display: block; font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            margin-bottom: 8px; color: var(--text-secondary);
+            transition: color 0.3s ease, transform 0.3s ease;
         }
 
         .form-group:focus-within label {
             color: var(--accent-light);
+            transform: translateX(2px);
+        }
+
+        /* === Validation indicators === */
+        .form-group .valid-icon {
+            position: absolute; right: 14px; top: 38px;
+            font-size: 14px; opacity: 0; transform: scale(0.5);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none;
+        }
+        .form-group.is-valid .valid-icon { opacity: 1; transform: scale(1); }
+        .form-group.is-valid input,
+        .form-group.is-valid select { border-color: rgba(0, 206, 201, 0.3); }
+        .form-group.is-invalid input,
+        .form-group.is-invalid select { animation: inputShake 0.4s ease; }
+        @keyframes inputShake {
+            0%,100% { transform: translateX(0); } 20% { transform: translateX(-4px); }
+            40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); }
         }
 
         /* === Inputs & Selects === */
@@ -235,6 +277,7 @@
             border-color: var(--accent);
             background-color: var(--bg-input-focus);
             box-shadow: 0 0 0 4px var(--accent-glow);
+            transform: scale(1.01);
         }
 
         select {
@@ -550,6 +593,19 @@
     </style>
 </head>
 <body>
+    <!-- SKELETON -->
+    <div id="skeletonScreen">
+        <div class="skeleton-content">
+            <div class="skeleton-logo"></div>
+            <div class="skeleton-block skeleton-hero"></div>
+            <div class="skeleton-block skeleton-label"></div>
+            <div class="skeleton-block skeleton-input"></div>
+            <div class="skeleton-block skeleton-label"></div>
+            <div class="skeleton-block skeleton-input"></div>
+            <div class="skeleton-block skeleton-card"></div>
+        </div>
+    </div>
+
     <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
 
     <div id="formContainer">
@@ -567,25 +623,31 @@
             <div class="step-dot" id="dot3"></div>
         </div>
 
+        <!-- SECTION 1 -->
+        <div class="form-section visible" id="section1">
         <h2>Shaxsiy ma'lumotlar</h2>
         <div class="card">
-            <div class="form-group"><label>To'liq Ism va Familiya 📝</label><input type="text" id="fullName" placeholder="Alisher Navoiy"></div>
+            <div class="form-group" id="fg-fullName"><label>To'liq Ism va Familiya 📝</label><input type="text" id="fullName" placeholder="Alisher Navoiy"><span class="valid-icon">✅</span></div>
             
-            <div class="form-group">
+            <div class="form-group" id="fg-dob">
                 <label>Tug'ilgan sana 📅</label>
                 <div class="dob-container">
                     <select id="dobDay" onchange="validate()"><option value="" disabled selected>Kun</option></select>
                     <select id="dobMonth" onchange="validate()"><option value="" disabled selected>Oy</option></select>
                     <select id="dobYear" onchange="validate()"><option value="" disabled selected>Yil</option></select>
                 </div>
+                <span class="valid-icon">✅</span>
             </div>
 
-            <div class="form-group"><label>Telefon raqam 📱</label><input type="tel" id="phone" placeholder="+998 (90) 123-45-67" value="+998 "></div>
+            <div class="form-group" id="fg-phone"><label>Telefon raqam 📱</label><input type="tel" id="phone" placeholder="+998 (90) 123-45-67" value="+998 "><span class="valid-icon">✅</span></div>
+        </div>
         </div>
 
+        <!-- SECTION 2 -->
+        <div class="form-section" id="section2">
         <h2>Ta'lim va Baholar</h2>
         <div class="card">
-            <div class="form-group">
+            <div class="form-group" id="fg-currentStudy">
                 <label>Hozirgi holatingiz 🏫</label>
                 <select id="currentStudy" onchange="toggleStudyOptions()">
                     <option value="" disabled selected>Tanlang...</option>
@@ -596,11 +658,15 @@
                     <option value="Universitet talabasiman">Universitet talabasiman</option>
                     <option value="Universitetni bitirganman">Universitetni bitirganman</option>
                 </select>
+                <span class="valid-icon">✅</span>
             </div>
             <div class="form-group hidden" id="studySubGroup"><label id="studySubLabel">Sinf / Kurs</label><select id="studySubSelect" onchange="validate()"></select></div>
-            <div class="form-group"><label>O'rtacha baho / GPA</label><input type="text" id="gpa" placeholder="Masalan: 4.5 yoki 85%"></div>
+            <div class="form-group" id="fg-gpa"><label>O'rtacha baho / GPA</label><input type="text" id="gpa" placeholder="Masalan: 4.5 yoki 85%"><span class="valid-icon">✅</span></div>
+        </div>
         </div>
 
+        <!-- SECTION 3 -->
+        <div class="form-section" id="section3">
         <h2>Sertifikat va Yo'nalish</h2>
         <div class="card">
             <div class="form-group">
@@ -635,17 +701,18 @@
                 <input type="text" id="satScoreInput" inputmode="numeric" placeholder="Masalan: 1450">
             </div>
 
-            <div class="form-group"><label>Tanlangan soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes..."></div>
+            <div class="form-group" id="fg-fieldOfStudy"><label>Tanlangan soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes..."><span class="valid-icon">✅</span></div>
 
-            <div class="form-group">
+            <div class="form-group" id="fg-country">
                 <label>Qaysi davlatga? ✈️</label>
                 <select id="country">
                     <option value="" disabled selected>Tanlang...</option>
                     <option value="Italiya">Italiya</option>
                     <option value="Germaniya">Germaniya</option>
                 </select>
+                <span class="valid-icon">✅</span>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="fg-finalStage">
                 <label>Topshiriladigan daraja 🎓</label>
                 <select id="finalStage" onchange="validate()">
                     <option value="" disabled selected>Tanlang...</option>
@@ -653,7 +720,9 @@
                     <option value="Bachelors">Bachelors (Bakalavr)</option>
                     <option value="Masters">Masters (Magistr)</option>
                 </select>
+                <span class="valid-icon">✅</span>
             </div>
+        </div>
         </div>
 
         <div class="footer-spacer"></div>
@@ -701,6 +770,38 @@
                 else if (type === 'error' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('error');
                 else if (type === 'medium' && tg.HapticFeedback.impactOccurred) tg.HapticFeedback.impactOccurred('medium');
             } catch (e) {}
+        }
+
+        // === SKELETON → FORM TRANSITION ===
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('skeletonScreen').classList.add('hide');
+                document.getElementById('formContainer').classList.add('loaded');
+            }, 800);
+        });
+
+        // === SECTION REVEAL ===
+        function updateSectionVisibility() {
+            const s1 = ['fullName','dobDay','dobMonth','dobYear','phone'];
+            const s1f = s1.filter(id => {
+                const el = document.getElementById(id);
+                if (id === 'phone') return el.value.replace(/\D/g, '').length >= 12;
+                return el && el.value && String(el.value).trim() !== '';
+            }).length;
+            const s2f = ['currentStudy','gpa'].filter(id => {
+                const el = document.getElementById(id);
+                return el && el.value && String(el.value).trim() !== '';
+            }).length;
+            if (s1f >= 3) document.getElementById('section2').classList.add('visible');
+            if (s2f >= 1) document.getElementById('section3').classList.add('visible');
+        }
+
+        // === FIELD VALIDATION UI ===
+        function updateFieldStatus(id, valid) {
+            const fg = document.getElementById('fg-' + id);
+            if (!fg) return;
+            if (valid) { fg.classList.add('is-valid'); fg.classList.remove('is-invalid'); }
+            else { fg.classList.remove('is-valid'); }
         }
 
         const dobDay = document.getElementById('dobDay');
@@ -799,11 +900,9 @@
             const checkField = (id) => {
                 totalCount++;
                 const el = document.getElementById(id);
-                if (el && el.value && String(el.value).trim() !== "" && String(el.value) !== "N/A") {
-                    filledCount++;
-                } else {
-                    isValid = false;
-                }
+                const valid = el && el.value && String(el.value).trim() !== "" && String(el.value) !== "N/A";
+                if (valid) { filledCount++; } else { isValid = false; }
+                updateFieldStatus(id, valid);
             };
 
             checkField("fullName"); checkField("currentStudy"); checkField("gpa");
@@ -816,7 +915,13 @@
 
             totalCount++;
             const phoneDigits = document.getElementById("phone").value.replace(/\D/g, '').length;
-            if (phoneDigits >= 12) filledCount++; else isValid = false;
+            const phoneValid = phoneDigits >= 12;
+            if (phoneValid) filledCount++; else isValid = false;
+            updateFieldStatus('phone', phoneValid);
+
+            // DOB combined
+            const dobValid = document.getElementById('dobDay').value && document.getElementById('dobMonth').value && document.getElementById('dobYear').value;
+            updateFieldStatus('dob', !!dobValid);
 
             if (!finalPayload) {
                 tg.MainButton.setParams({ color: isValid ? "#6c5ce7" : "#c4c4c6", is_active: isValid, text: "YUBORISH" });
@@ -826,13 +931,12 @@
 
             // Update step dots
             const progress = filledCount / totalCount;
-            const dot1 = document.getElementById('dot1');
-            const dot2 = document.getElementById('dot2');
-            const dot3 = document.getElementById('dot3');
-            
-            dot1.className = 'step-dot' + (progress >= 0.33 ? ' done' : ' active');
-            dot2.className = 'step-dot' + (progress >= 0.66 ? ' done' : (progress >= 0.33 ? ' active' : ''));
-            dot3.className = 'step-dot' + (progress >= 1 ? ' done' : (progress >= 0.66 ? ' active' : ''));
+            document.getElementById('dot1').className = 'step-dot' + (progress >= 0.33 ? ' done' : ' active');
+            document.getElementById('dot2').className = 'step-dot' + (progress >= 0.66 ? ' done' : (progress >= 0.33 ? ' active' : ''));
+            document.getElementById('dot3').className = 'step-dot' + (progress >= 1 ? ' done' : (progress >= 0.66 ? ' active' : ''));
+
+            // Reveal sections
+            updateSectionVisibility();
         }
 
         document.querySelectorAll('input, select').forEach(el => { el.addEventListener('input', validate); el.addEventListener('change', validate); });
@@ -966,6 +1070,9 @@
                     
                     ringEl.classList.add('celebrate');
 
+                    // 🎵 Play atlet.mp3 for ALL results
+                    playVictoryFanfare();
+
                     if (prob >= 70) {
                         // 🎉 HIGH — Epic celebration
                         ringEl.classList.add('glow-high');
@@ -1001,7 +1108,6 @@
                         // Star particles
                         spawnStars(resultScreen, '#00cec9', 30);
 
-                        playVictoryFanfare();
                         safeVibrate('success');
 
                     } else if (prob >= 40) {
