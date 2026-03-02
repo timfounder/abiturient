@@ -318,9 +318,17 @@
             const subStudy = document.getElementById("studySubSelect").value;
             if (subStudy && subStudy !== "N/A" && !document.getElementById("studySubGroup").classList.contains("hidden")) finalStudyStatus += ` (${subStudy})`;
 
-            let gpaStr = document.getElementById("gpa").value;
-            let gpaVal = parseFloat(gpaStr.replace(/[^0-9.]/g, ''));
-            if (isNaN(gpaVal)) gpaVal = 0; if (gpaVal > 5) gpaVal = (gpaVal / 100) * 5;
+            // 🔥 УМНАЯ ОБРАБОТКА GPA (дроби 5/5, проценты 85%, запятые 4,5)
+            let gpaStr = document.getElementById("gpa").value.replace(/,/g, '.');
+            let gpaVal = 0;
+            if (gpaStr.includes('/')) {
+                gpaVal = parseFloat(gpaStr.split('/')[0]);
+            } else {
+                let match = gpaStr.match(/\d+(\.\d+)?/);
+                if (match) gpaVal = parseFloat(match[0]);
+            }
+            if (isNaN(gpaVal)) gpaVal = 0; 
+            if (gpaVal > 5) gpaVal = (gpaVal / 100) * 5;
 
             const certType = document.getElementById("certType").value;
             const certScore = (certType === "None") ? "Yo'q" : document.getElementById("certScoreSelect").value;
@@ -366,10 +374,16 @@
                 else { finalCertStr += " + SAT"; finalScoreStr += ` | SAT: ${satScoreInput}`; }
             }
 
-            // Получаем юзернейм прямо из Telegram Mini App
+            // 🔥 Умное получение данных пользователя из Telegram (Имя + ID)
             let tgUsername = "Kiritilmagan";
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username) {
-                tgUsername = tg.initDataUnsafe.user.username;
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                if (tg.initDataUnsafe.user.username) {
+                    tgUsername = tg.initDataUnsafe.user.username; 
+                } else {
+                    let firstName = tg.initDataUnsafe.user.first_name || "Ismsiz";
+                    let tgId = tg.initDataUnsafe.user.id || "";
+                    tgUsername = firstName + " (ID: " + tgId + ")";
+                }
             }
 
             finalPayload = {
@@ -379,13 +393,12 @@
                 username: tgUsername
             };
 
-            // 🔥 МАГИЯ: Скрытая отправка данных в Google Sheet БЕЗ закрытия приложения
+            // 🔥 ЖЕЛЕЗОБЕТОННАЯ ОТПРАВКА В ФОНЕ (Через XMLHttpRequest)
             const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbxnet8ErUY23dtv21IyryT1OZe7PdJvL4gIGhPLTnpoG2NqcJJN13NnAhbkU9qitLmg/exec";
-            fetch(GOOGLE_SHEET_URL, {
-                method: "POST", mode: "no-cors",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(finalPayload)
-            }).catch(e => console.log("Fonda yuborishda xatolik: ", e));
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", GOOGLE_SHEET_URL, true);
+            xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8"); 
+            xhr.send(JSON.stringify(finalPayload));
 
             // Запускаем красивую анимацию
             document.getElementById("resultScreen").classList.add("active");
