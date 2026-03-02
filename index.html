@@ -1037,7 +1037,23 @@
                 let satVal = parseInt(satScoreInput) || 0;
                 if (satVal >= 1400) prob = 90; else if (satVal >= 1200) prob = 85; else if (satVal >= 1000) prob = 80; else prob = 70;
             } else if (level === "Masters") {
-                if (gpaVal > 4.3) prob = getRandom(85, 95); else if (gpaVal >= 3.0) prob = getRandom(70, 85); else prob = getRandom(10, 60);
+                // Masters: GPA + сертификат обязательны
+                let certLevel = hasCert ? document.getElementById("certScoreSelect").value : "None";
+                let certBonus = 0;
+                if (certLevel === "C2") certBonus = 15;
+                else if (certLevel === "C1") certBonus = 10;
+                else if (certLevel === "B2") certBonus = 0;
+                else if (certLevel === "B1") certBonus = -20;
+                else certBonus = -30; // нет сертификата
+
+                if (gpaVal > 4.3) prob = getRandom(75, 90) + certBonus;
+                else if (gpaVal >= 3.5) prob = getRandom(60, 75) + certBonus;
+                else if (gpaVal >= 3.0) prob = getRandom(40, 60) + certBonus;
+                else prob = getRandom(10, 30) + certBonus;
+
+                // Ограничиваем диапазон
+                if (prob > 95) prob = 95;
+                if (prob < 5) prob = 5;
             } else {
                 if (!hasCert) prob = getRandom(10, 20);
                 else {
