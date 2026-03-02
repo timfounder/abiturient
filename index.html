@@ -1143,57 +1143,15 @@
             } catch(e) {}
         }
 
-        // 🔥 Epic victory fanfare for 70%+ (custom celebratory sound)
+        // 🔥 Epic victory sound for 70%+ (custom audio file)
+        const victoryAudio = new Audio('https://timfounder.github.io/abiturient/atlet.mp3');
+        victoryAudio.preload = 'auto';
+        victoryAudio.volume = 0.8;
+
         function playVictoryFanfare() {
             try {
-                const ctx = getAudioCtx();
-
-                // Chord: C5 E5 G5 — bright major triad
-                const notes = [523.25, 659.25, 783.99];
-                notes.forEach((freq, i) => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.connect(gain); gain.connect(ctx.destination);
-                    osc.type = 'sine';
-                    osc.frequency.value = freq;
-                    const t = ctx.currentTime;
-                    gain.gain.setValueAtTime(0, t);
-                    gain.gain.linearRampToValueAtTime(0.08, t + 0.05);
-                    gain.gain.setValueAtTime(0.08, t + 0.3);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
-                    osc.start(t);
-                    osc.stop(t + 0.8);
-                });
-
-                // Rising arpeggio: C5 → E5 → G5 → C6
-                const arp = [523.25, 659.25, 783.99, 1046.5];
-                arp.forEach((freq, i) => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.connect(gain); gain.connect(ctx.destination);
-                    osc.type = 'triangle';
-                    osc.frequency.value = freq;
-                    const t = ctx.currentTime + 0.15 + i * 0.1;
-                    gain.gain.setValueAtTime(0, t);
-                    gain.gain.linearRampToValueAtTime(0.1, t + 0.03);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-                    osc.start(t);
-                    osc.stop(t + 0.35);
-                });
-
-                // Final sparkle — high shimmer
-                const shimmer = ctx.createOscillator();
-                const sGain = ctx.createGain();
-                shimmer.connect(sGain); sGain.connect(ctx.destination);
-                shimmer.type = 'sine';
-                shimmer.frequency.setValueAtTime(2093, ctx.currentTime + 0.6);
-                shimmer.frequency.exponentialRampToValueAtTime(3000, ctx.currentTime + 1.0);
-                sGain.gain.setValueAtTime(0, ctx.currentTime + 0.6);
-                sGain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 0.65);
-                sGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
-                shimmer.start(ctx.currentTime + 0.6);
-                shimmer.stop(ctx.currentTime + 1.2);
-
+                victoryAudio.currentTime = 0;
+                victoryAudio.play();
             } catch(e) {}
         }
 
