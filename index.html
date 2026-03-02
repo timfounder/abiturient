@@ -1212,9 +1212,6 @@
                     else if (prob >= 40) cta.classList.add('medium-btn');
                     else cta.classList.add('low-btn');
                     setTimeout(() => { cta.classList.add('show'); }, 600);
-
-                    // Also keep MainButton as backup
-                    setTimeout(() => { tg.MainButton.setParams({ text: btnText, color: "#6c5ce7", is_active: true }); tg.MainButton.show(); }, 800);
                 }
             }, speed);
         });
