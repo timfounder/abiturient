@@ -418,6 +418,51 @@
             transform: translateY(0);
         }
 
+        /* === CTA Button on result screen === */
+        .result-cta {
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 16px 36px; border-radius: 16px; border: none;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 16px; font-weight: 700; letter-spacing: 0.3px;
+            color: #fff; cursor: pointer; z-index: 1;
+            margin-top: 20px;
+            opacity: 0; transform: translateY(16px) scale(0.95);
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            -webkit-tap-highlight-color: transparent;
+            text-decoration: none;
+            position: relative; overflow: hidden;
+        }
+        .result-cta.show { opacity: 1; transform: translateY(0) scale(1); }
+        .result-cta.high-btn {
+            background: linear-gradient(135deg, #00cec9 0%, #6c5ce7 100%);
+            box-shadow: 0 8px 30px rgba(0, 206, 201, 0.35);
+        }
+        .result-cta.medium-btn {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            color: #1a1a2e;
+            box-shadow: 0 8px 30px rgba(255, 234, 167, 0.3);
+        }
+        .result-cta.low-btn {
+            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+            box-shadow: 0 8px 30px var(--accent-glow);
+        }
+        .result-cta:active { transform: scale(0.96) !important; }
+        .result-cta .cta-arrow {
+            font-size: 18px; transition: transform 0.3s ease;
+        }
+        .result-cta::after {
+            content: ''; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%);
+            transform: rotate(25deg) translateX(-100%);
+            animation: ctaShimmer 3s 1s infinite;
+        }
+        @keyframes ctaShimmer {
+            0% { transform: rotate(25deg) translateX(-100%); }
+            30% { transform: rotate(25deg) translateX(100%); }
+            100% { transform: rotate(25deg) translateX(100%); }
+        }
+
         /* === Step indicator dots === */
         .step-dots {
             display: flex;
@@ -738,6 +783,10 @@
         </div>
         <div class="result-badge" id="resultBadge"></div>
         <div class="result-text" id="resultText">Hisoblanmoqda...</div>
+        <button class="result-cta" id="resultCta" onclick="handleCtaClick()">
+            <span id="ctaLabel">Batafsil</span>
+            <span class="cta-arrow">→</span>
+        </button>
     </div>
 
     <!-- ============ ALL LOGIC BELOW IS 100% ORIGINAL — UNTOUCHED ============ -->
@@ -1153,11 +1202,31 @@
                     }
 
                     setTimeout(() => { badge.classList.add('show'); }, 200);
-                    
-                    setTimeout(() => { tg.MainButton.setParams({ text: btnText, color: "#6c5ce7", is_active: true }); tg.MainButton.show(); }, 500);
+
+                    // Show CTA button
+                    const cta = document.getElementById('resultCta');
+                    const ctaLabel = document.getElementById('ctaLabel');
+                    ctaLabel.textContent = btnText;
+                    cta.className = 'result-cta';
+                    if (prob >= 70) cta.classList.add('high-btn');
+                    else if (prob >= 40) cta.classList.add('medium-btn');
+                    else cta.classList.add('low-btn');
+                    setTimeout(() => { cta.classList.add('show'); }, 600);
+
+                    // Also keep MainButton as backup
+                    setTimeout(() => { tg.MainButton.setParams({ text: btnText, color: "#6c5ce7", is_active: true }); tg.MainButton.show(); }, 800);
                 }
             }, speed);
         });
+        // === CTA BUTTON HANDLER ===
+        function handleCtaClick() {
+            safeVibrate('medium');
+            if (window.targetBtnLink) {
+                tg.openTelegramLink(window.targetBtnLink);
+            }
+            setTimeout(() => { tg.close(); }, 150);
+        }
+
         // === AUDIO SYSTEM ===
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
