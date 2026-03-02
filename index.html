@@ -1032,34 +1032,103 @@
             
             let prob = 0; 
             let useSatLogic = (level === "Bachelors" && hasSat && country !== "Germaniya");
+            let certLevel = hasCert ? document.getElementById("certScoreSelect").value : "None";
+            let isGerman = (certType === "Nemis tili sertifikati");
+            let isGermany = (country === "Germaniya");
+
+            // === Определяем силу сертификата ===
+            // Для Германии: немецкий C1+ = сильный, B2 = средний, B1 = слабый
+            // Для Германии: английский работает, но слабее немецкого (-10%)
+            // Для Италии: немецкий = бесполезен, IELTS/TOEFL B2+ = сильный
+            let certStrength = "none"; // none | weak | medium | strong
+            
+            if (!hasCert) {
+                certStrength = "none";
+            } else if (isGermany) {
+                if (isGerman) {
+                    // Немецкий для Германии
+                    if (certLevel === "C1" || certLevel === "C2") certStrength = "strong";
+                    else if (certLevel === "B2") certStrength = "medium";
+                    else certStrength = "weak"; // B1
+                } else {
+                    // Английский для Германии (подходит, но хуже)
+                    if (certLevel === "C1" || certLevel === "C2") certStrength = "medium";
+                    else if (certLevel === "B2") certStrength = "weak";
+                    else certStrength = "weak"; // B1
+                }
+            } else {
+                // Италия
+                if (isGerman) {
+                    certStrength = "none"; // Немецкий для Италии бесполезен
+                } else {
+                    if (certLevel === "C1" || certLevel === "C2") certStrength = "strong";
+                    else if (certLevel === "B2") certStrength = "medium";
+                    else certStrength = "weak"; // B1
+                }
+            }
+
+            // === РАСЧЁТ ВЕРОЯТНОСТИ ===
 
             if (useSatLogic) {
+                // SAT + Bachelors (не Германия)
                 let satVal = parseInt(satScoreInput) || 0;
-                if (satVal >= 1400) prob = 90; else if (satVal >= 1200) prob = 85; else if (satVal >= 1000) prob = 80; else prob = 70;
+                if (certStrength === "strong") {
+                    if (satVal >= 1400) prob = getRandom(88, 95); else if (satVal >= 1200) prob = getRandom(80, 88); else if (satVal >= 1000) prob = getRandom(70, 80); else prob = getRandom(60, 70);
+                } else if (certStrength === "medium") {
+                    if (satVal >= 1400) prob = getRandom(75, 85); else if (satVal >= 1200) prob = getRandom(65, 75); else prob = getRandom(55, 65);
+                } else {
+                    // weak/none + SAT
+                    if (satVal >= 1400) prob = getRandom(45, 55); else prob = getRandom(30, 45);
+                }
+
             } else if (level === "Masters") {
-                // Masters: GPA + сертификат обязательны
-                let certLevel = hasCert ? document.getElementById("certScoreSelect").value : "None";
-                let certBonus = 0;
-                if (certLevel === "C2") certBonus = 15;
-                else if (certLevel === "C1") certBonus = 10;
-                else if (certLevel === "B2") certBonus = 0;
-                else if (certLevel === "B1") certBonus = -20;
-                else certBonus = -30; // нет сертификата
+                // === MASTERS ===
+                if (certStrength === "strong") {
+                    if (gpaVal > 4.3) prob = getRandom(82, 92); else if (gpaVal >= 3.5) prob = getRandom(72, 82); else if (gpaVal >= 3.0) prob = getRandom(62, 72); else prob = getRandom(35, 50);
+                } else if (certStrength === "medium") {
+                    if (gpaVal > 4.3) prob = getRandom(60, 68); else if (gpaVal >= 3.5) prob = getRandom(52, 62); else if (gpaVal >= 3.0) prob = getRandom(42, 55); else prob = getRandom(25, 38);
+                } else if (certStrength === "weak") {
+                    if (gpaVal > 4.3) prob = getRandom(35, 48); else if (gpaVal >= 3.0) prob = getRandom(20, 35); else prob = getRandom(10, 22);
+                } else {
+                    // Нет сертификата
+                    if (gpaVal > 4.3) prob = getRandom(15, 25); else prob = getRandom(5, 18);
+                }
 
-                if (gpaVal > 4.3) prob = getRandom(75, 90) + certBonus;
-                else if (gpaVal >= 3.5) prob = getRandom(60, 75) + certBonus;
-                else if (gpaVal >= 3.0) prob = getRandom(40, 60) + certBonus;
-                else prob = getRandom(10, 30) + certBonus;
+            } else if (level === "Foundation") {
+                // === FOUNDATION (проще поступить) ===
+                if (certStrength === "strong") {
+                    if (gpaVal > 4.0) prob = getRandom(82, 92); else if (gpaVal > 3.0) prob = getRandom(70, 82); else prob = getRandom(50, 65);
+                } else if (certStrength === "medium") {
+                    if (gpaVal > 4.0) prob = getRandom(62, 72); else if (gpaVal > 3.0) prob = getRandom(52, 65); else prob = getRandom(35, 50);
+                } else if (certStrength === "weak") {
+                    if (gpaVal > 4.0) prob = getRandom(38, 50); else if (gpaVal > 3.0) prob = getRandom(25, 40); else prob = getRandom(12, 25);
+                } else {
+                    prob = getRandom(8, 18);
+                }
 
-                // Ограничиваем диапазон
-                if (prob > 95) prob = 95;
-                if (prob < 5) prob = 5;
             } else {
-                if (!hasCert) prob = getRandom(10, 20);
-                else {
-                    if (gpaVal > 3.0) {
-                        if (subStudy === "9-sinf") prob = getRandom(65, 75); else if (subStudy === "10-sinf") prob = getRandom(75, 85); else prob = getRandom(75, 85);
-                    } else prob = getRandom(30, 60);
+                // === BACHELORS (без SAT) ===
+                if (certStrength === "strong") {
+                    if (gpaVal > 4.0) {
+                        if (subStudy === "9-sinf") prob = getRandom(68, 78); else if (subStudy === "10-sinf") prob = getRandom(76, 86); else prob = getRandom(78, 90);
+                    } else if (gpaVal > 3.0) {
+                        if (subStudy === "9-sinf") prob = getRandom(58, 68); else prob = getRandom(62, 75);
+                    } else {
+                        prob = getRandom(35, 50);
+                    }
+                } else if (certStrength === "medium") {
+                    if (gpaVal > 4.0) {
+                        if (subStudy === "9-sinf") prob = getRandom(52, 62); else if (subStudy === "10-sinf") prob = getRandom(55, 65); else prob = getRandom(58, 68);
+                    } else if (gpaVal > 3.0) {
+                        prob = getRandom(42, 55);
+                    } else {
+                        prob = getRandom(25, 38);
+                    }
+                } else if (certStrength === "weak") {
+                    if (gpaVal > 4.0) prob = getRandom(35, 48); else if (gpaVal > 3.0) prob = getRandom(22, 38); else prob = getRandom(10, 22);
+                } else {
+                    // Нет сертификата
+                    prob = getRandom(8, 18);
                 }
             }
 
