@@ -408,6 +408,127 @@
         /* === Footer spacer === */
         .footer-spacer { height: 24px; }
 
+        /* === Celebration effects === */
+        .result-emoji-burst {
+            position: absolute;
+            font-size: 32px;
+            pointer-events: none;
+            z-index: 3;
+            animation: emojiFly 2s ease-out forwards;
+        }
+
+        @keyframes emojiFly {
+            0% { opacity: 1; transform: translate(0, 0) scale(0.3) rotate(0deg); }
+            50% { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1.2) rotate(180deg); }
+            100% { opacity: 0; transform: translate(var(--tx2), var(--ty2)) scale(0.5) rotate(360deg); }
+        }
+
+        .ring-container.celebrate {
+            animation: ringCelebrate 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes ringCelebrate {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.15); }
+            60% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        .glow-burst {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300px;
+            height: 300px;
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            animation: glowBurst 1.2s ease-out forwards;
+        }
+
+        @keyframes glowBurst {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0.8; }
+            50% { opacity: 0.4; }
+            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+        }
+
+        .stars-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .star-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: starFloat 2.5s ease-out forwards;
+        }
+
+        @keyframes starFloat {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0); }
+        }
+
+        .result-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            opacity: 0;
+            transform: translateY(10px) scale(0.9);
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 1;
+        }
+
+        .result-badge.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .result-badge.high {
+            background: rgba(0, 206, 201, 0.15);
+            color: #00cec9;
+            border: 1px solid rgba(0, 206, 201, 0.3);
+        }
+
+        .result-badge.medium {
+            background: rgba(255, 234, 167, 0.15);
+            color: #ffeaa7;
+            border: 1px solid rgba(255, 234, 167, 0.3);
+        }
+
+        .result-badge.low {
+            background: rgba(255, 107, 107, 0.15);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        /* Ring glow on completion */
+        .ring-container.glow-high .progress-ring {
+            filter: drop-shadow(0 0 24px rgba(0, 206, 201, 0.5));
+        }
+
+        .ring-container.glow-medium .progress-ring {
+            filter: drop-shadow(0 0 24px rgba(255, 234, 167, 0.4));
+        }
+
+        .ring-container.glow-low .progress-ring {
+            filter: drop-shadow(0 0 24px rgba(255, 107, 107, 0.4));
+        }
+
         /* === Scrollbar === */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -539,13 +660,14 @@
     </div>
 
     <div id="resultScreen">
-        <div class="ring-container">
+        <div class="ring-container" id="ringContainer">
             <svg class="progress-ring" width="180" height="180">
                <circle class="progress-ring__circle-bg" stroke-width="10" fill="transparent" r="80" cx="90" cy="90"/>
                <circle id="animCircle" class="progress-ring__circle" stroke-width="10" fill="transparent" r="80" cx="90" cy="90"/>
             </svg>
             <div class="circle-content"><div class="percent-num" id="percentNum">0%</div><div class="percent-label">Imkoniyat</div></div>
         </div>
+        <div class="result-badge" id="resultBadge"></div>
         <div class="result-text" id="resultText">Hisoblanmoqda...</div>
     </div>
 
@@ -828,15 +950,142 @@
                     document.getElementById("resultText").innerText = msgText;
                     document.getElementById("resultText").classList.add("show");
                     
-                    if (prob >= 75) {
-                        try { if (window.confetti) confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } }); } catch(e){}
+                    // --- CELEBRATION SYSTEM ---
+                    const ringEl = document.getElementById('ringContainer');
+                    const badge = document.getElementById('resultBadge');
+                    const resultScreen = document.getElementById('resultScreen');
+                    
+                    ringEl.classList.add('celebrate');
+
+                    if (prob >= 70) {
+                        // 🎉 HIGH — Epic celebration
+                        ringEl.classList.add('glow-high');
+                        badge.textContent = '🔥 Ajoyib natija!';
+                        badge.className = 'result-badge high';
+
+                        // Multi-wave confetti
+                        try {
+                            if (window.confetti) {
+                                // Wave 1 — center burst
+                                confetti({ particleCount: 100, spread: 70, origin: { y: 0.5 }, colors: ['#00cec9', '#6c5ce7', '#a29bfe', '#74b9ff', '#ffffff'] });
+                                // Wave 2 — sides
+                                setTimeout(() => {
+                                    confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: 0.6 }, colors: ['#00cec9', '#6c5ce7', '#a29bfe'] });
+                                    confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1, y: 0.6 }, colors: ['#00cec9', '#6c5ce7', '#a29bfe'] });
+                                }, 300);
+                                // Wave 3 — rain
+                                setTimeout(() => {
+                                    confetti({ particleCount: 40, spread: 100, origin: { y: 0.3 }, gravity: 0.6, scalar: 1.2, colors: ['#ffeaa7', '#00cec9', '#ffffff'] });
+                                }, 700);
+                            }
+                        } catch(e){}
+
+                        // Glow burst
+                        const glow = document.createElement('div');
+                        glow.className = 'glow-burst';
+                        glow.style.background = 'radial-gradient(circle, rgba(0,206,201,0.4) 0%, transparent 70%)';
+                        resultScreen.appendChild(glow);
+
+                        // Emoji burst
+                        spawnEmojiBurst(resultScreen, ['🎓', '🌟', '🔥', '🚀', '✨', '🎉', '💫'], 10);
+                        
+                        // Star particles
+                        spawnStars(resultScreen, '#00cec9', 30);
+
                         safeVibrate('success');
-                    } else { safeVibrate(prob > 40 ? 'warning' : 'error'); }
+
+                    } else if (prob >= 40) {
+                        // 💪 MEDIUM — Encouraging
+                        ringEl.classList.add('glow-medium');
+                        badge.textContent = '💪 Yaxshi imkoniyat!';
+                        badge.className = 'result-badge medium';
+
+                        try {
+                            if (window.confetti) {
+                                confetti({ particleCount: 50, spread: 60, origin: { y: 0.55 }, colors: ['#ffeaa7', '#6c5ce7', '#a29bfe'] });
+                                setTimeout(() => {
+                                    confetti({ particleCount: 30, spread: 80, origin: { y: 0.4 }, gravity: 0.8, colors: ['#ffeaa7', '#ffffff'] });
+                                }, 400);
+                            }
+                        } catch(e){}
+
+                        const glow = document.createElement('div');
+                        glow.className = 'glow-burst';
+                        glow.style.background = 'radial-gradient(circle, rgba(255,234,167,0.3) 0%, transparent 70%)';
+                        resultScreen.appendChild(glow);
+
+                        spawnEmojiBurst(resultScreen, ['💪', '⭐', '📚', '✨'], 6);
+                        spawnStars(resultScreen, '#ffeaa7', 15);
+
+                        safeVibrate('warning');
+
+                    } else {
+                        // 📚 LOW — Motivational
+                        ringEl.classList.add('glow-low');
+                        badge.textContent = '📚 Biz yordam beramiz!';
+                        badge.className = 'result-badge low';
+
+                        const glow = document.createElement('div');
+                        glow.className = 'glow-burst';
+                        glow.style.background = 'radial-gradient(circle, rgba(255,107,107,0.2) 0%, transparent 70%)';
+                        resultScreen.appendChild(glow);
+
+                        spawnStars(resultScreen, '#ff6b6b', 8);
+                        safeVibrate('error');
+                    }
+
+                    setTimeout(() => { badge.classList.add('show'); }, 200);
                     
                     setTimeout(() => { tg.MainButton.setParams({ text: btnText, color: "#6c5ce7", is_active: true }); tg.MainButton.show(); }, 500);
                 }
             }, speed);
         });
+        // === CELEBRATION HELPERS ===
+        function spawnEmojiBurst(container, emojis, count) {
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.className = 'result-emoji-burst';
+                    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                    el.style.top = '45%';
+                    el.style.left = '50%';
+                    const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5);
+                    const dist = 80 + Math.random() * 120;
+                    const dist2 = dist + 40 + Math.random() * 60;
+                    el.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+                    el.style.setProperty('--ty', Math.sin(angle) * dist - 40 + 'px');
+                    el.style.setProperty('--tx2', Math.cos(angle) * dist2 + 'px');
+                    el.style.setProperty('--ty2', Math.sin(angle) * dist2 + 60 + 'px');
+                    container.appendChild(el);
+                    setTimeout(() => el.remove(), 2200);
+                }, i * 60);
+            }
+        }
+
+        function spawnStars(container, color, count) {
+            const starsDiv = document.createElement('div');
+            starsDiv.className = 'stars-container';
+            container.appendChild(starsDiv);
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const star = document.createElement('div');
+                    star.className = 'star-particle';
+                    star.style.background = color;
+                    star.style.boxShadow = `0 0 6px ${color}`;
+                    star.style.left = Math.random() * 100 + '%';
+                    star.style.top = Math.random() * 100 + '%';
+                    const sx = (Math.random() - 0.5) * 200;
+                    const sy = (Math.random() - 0.5) * 200;
+                    star.style.setProperty('--sx', sx + 'px');
+                    star.style.setProperty('--sy', sy + 'px');
+                    star.style.width = (2 + Math.random() * 4) + 'px';
+                    star.style.height = star.style.width;
+                    starsDiv.appendChild(star);
+                    setTimeout(() => star.remove(), 2800);
+                }, i * 40);
+            }
+            setTimeout(() => starsDiv.remove(), 3500);
+        }
     </script>
 </body>
 </html>
