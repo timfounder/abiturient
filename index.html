@@ -1119,8 +1119,12 @@
                     
                     ringEl.classList.add('celebrate');
 
-                    // 🎵 Play atlet.mp3 for ALL results
-                    playVictoryFanfare();
+                    // 🎵 Audio split: synth fanfare for 65%+, mp3 for <65%
+                    if (prob >= 65) {
+                        playVictoryFanfare();
+                    } else {
+                        playMotivationAudio();
+                    }
 
                     if (prob >= 70) {
                         // 🎉 HIGH — Epic celebration
@@ -1315,15 +1319,41 @@
             } catch(e) {}
         }
 
-        // 🔥 Epic victory sound for 70%+ (custom audio file)
-        const victoryAudio = new Audio('https://timfounder.github.io/abiturient/atlet.mp3');
-        victoryAudio.preload = 'auto';
-        victoryAudio.volume = 0.8;
+        // 🔥 Motivation mp3 — plays for results BELOW 65%
+        const motivationAudio = new Audio('https://timfounder.github.io/abiturient/atlet.mp3');
+        motivationAudio.preload = 'auto';
+        motivationAudio.volume = 0.8;
+        function playMotivationAudio() {
+            try { motivationAudio.currentTime = 0; motivationAudio.play(); } catch(e) {}
+        }
 
+        // 🎉 Synth victory fanfare — plays for results 65%+
         function playVictoryFanfare() {
             try {
-                victoryAudio.currentTime = 0;
-                victoryAudio.play();
+                const ctx = getAudioCtx();
+                [523.25, 659.25, 783.99].forEach(freq => {
+                    const o=ctx.createOscillator(),g=ctx.createGain();
+                    o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=freq;
+                    g.gain.setValueAtTime(0,ctx.currentTime);g.gain.linearRampToValueAtTime(0.08,ctx.currentTime+0.05);
+                    g.gain.setValueAtTime(0.08,ctx.currentTime+0.3);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.8);
+                    o.start(ctx.currentTime);o.stop(ctx.currentTime+0.8);
+                });
+                [523.25,659.25,783.99,1046.5].forEach((freq,i) => {
+                    const o=ctx.createOscillator(),g=ctx.createGain();
+                    o.connect(g);g.connect(ctx.destination);o.type='triangle';o.frequency.value=freq;
+                    const t=ctx.currentTime+0.15+i*0.1;
+                    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.1,t+0.03);
+                    g.gain.exponentialRampToValueAtTime(0.001,t+0.35);
+                    o.start(t);o.stop(t+0.35);
+                });
+                const s=ctx.createOscillator(),sg=ctx.createGain();
+                s.connect(sg);sg.connect(ctx.destination);s.type='sine';
+                s.frequency.setValueAtTime(2093,ctx.currentTime+0.6);
+                s.frequency.exponentialRampToValueAtTime(3000,ctx.currentTime+1.0);
+                sg.gain.setValueAtTime(0,ctx.currentTime+0.6);
+                sg.gain.linearRampToValueAtTime(0.04,ctx.currentTime+0.65);
+                sg.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+1.2);
+                s.start(ctx.currentTime+0.6);s.stop(ctx.currentTime+1.2);
             } catch(e) {}
         }
 
