@@ -6,7 +6,6 @@
     <title>Abituriyent Anketasi</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
     <style>
         :root {
             --tg-theme-bg-color: #ffffff;
@@ -15,684 +14,57 @@
             --tg-theme-hint-color: #8e8e93;
             --tg-theme-button-color: #007aff;
             --border-radius: 16px;
-
-            /* Custom palette */
-            --bg-primary: #0a0e1a;
-            --bg-card: #131826;
-            --bg-input: #1a2035;
-            --bg-input-focus: #1f2847;
-            --accent: #6c5ce7;
-            --accent-light: #a29bfe;
-            --accent-glow: rgba(108, 92, 231, 0.25);
-            --text-primary: #f0f0f5;
-            --text-secondary: #8a8ea8;
-            --text-muted: #555a75;
-            --border-subtle: rgba(255,255,255,0.06);
-            --success: #00cec9;
-            --warning: #ffeaa7;
-            --danger: #ff6b6b;
-            --gradient-accent: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 50%, #74b9ff 100%);
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* === Animated background === */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(ellipse at 20% 50%, rgba(108, 92, 231, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 20%, rgba(116, 185, 255, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 80%, rgba(162, 155, 254, 0.05) 0%, transparent 50%);
-            z-index: 0;
-            animation: bgShift 20s ease-in-out infinite alternate;
-        }
-
-        @keyframes bgShift {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(-3%, -3%) rotate(2deg); }
-        }
-
-        /* === SKELETON LOADING === */
-        #skeletonScreen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-            background: var(--bg-primary); z-index: 3000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
-        }
-        #skeletonScreen.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-        .skeleton-content { width: 85%; max-width: 400px; }
-        .skeleton-block {
-            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-input) 50%, var(--bg-card) 75%);
-            background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 16px; margin-bottom: 16px;
-        }
-        .skeleton-hero { height: 120px; border-radius: 20px; margin-bottom: 24px; }
-        .skeleton-label { height: 12px; width: 40%; border-radius: 6px; margin-bottom: 10px; }
-        .skeleton-input { height: 48px; border-radius: 14px; margin-bottom: 18px; }
-        .skeleton-card { height: 180px; border-radius: 20px; }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        .skeleton-logo {
-            width: 56px; height: 56px; border-radius: 16px; background: var(--gradient-accent);
-            opacity: 0.3; margin: 0 auto 16px;
-            animation: shimmer 1.5s infinite, skPulse 2s ease-in-out infinite;
-        }
-        @keyframes skPulse { 0%,100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.05); opacity: 0.5; } }
-
-        /* === Progress bar === */
-        .progress-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: rgba(255,255,255,0.03);
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: var(--gradient-accent);
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 0 2px 2px 0;
-            box-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        /* === Main content === */
-        #formContainer {
-            position: relative; z-index: 1; padding: 16px 16px 100px;
-            max-width: 480px; margin: 0 auto;
-            opacity: 0; transform: translateY(10px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-        #formContainer.loaded { opacity: 1; transform: translateY(0); }
-
-        /* === Section reveal === */
-        .form-section {
-            opacity: 0; transform: translateY(24px);
-            transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-            pointer-events: none;
-        }
-        .form-section.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
-
-        /* === Hero header === */
-        .hero {
-            text-align: center;
-            padding: 28px 8px 20px;
-            margin-bottom: 8px;
-        }
-
-        .hero-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 16px;
-            background: var(--gradient-accent);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            margin-bottom: 16px;
-            box-shadow: 0 8px 32px var(--accent-glow);
-            animation: floatIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .hero h1 {
-            font-family: 'DM Serif Display', serif;
-            font-size: 26px;
-            font-weight: 400;
-            letter-spacing: -0.3px;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #fff 0%, #c8c8e0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: floatIn 0.8s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .hero p {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            animation: floatIn 0.8s 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        @keyframes floatIn {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* === Section headers === */
-        h2 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin: 28px 0 12px 4px;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        h2::before {
-            content: '';
-            width: 16px;
-            height: 2px;
-            background: var(--gradient-accent);
-            border-radius: 1px;
-        }
-
-        /* === Cards === */
-        .card {
-            background: var(--bg-card);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 16px;
-            border: 1px solid var(--border-subtle);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
-            backdrop-filter: blur(10px);
-            animation: cardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .card:nth-child(2) { animation-delay: 0.05s; }
-        .card:nth-child(3) { animation-delay: 0.1s; }
-        .card:nth-child(4) { animation-delay: 0.15s; }
-
-        @keyframes cardIn {
-            from { opacity: 0; transform: translateY(20px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        /* === Form groups === */
-        .form-group { margin-bottom: 18px; transition: all 0.3s ease; position: relative; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); margin: 0; padding: 20px 16px; box-sizing: border-box; min-height: 100vh; overflow-x: hidden; }
+        .progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 6px; background: rgba(0,0,0,0.05); z-index: 1000; }
+        .progress-bar { height: 100%; width: 0%; background: var(--tg-theme-button-color); transition: width 0.4s ease; border-radius: 0 4px 4px 0; }
+        h2 { font-size: 19px; font-weight: 700; margin: 25px 0 12px 5px; }
+        .card { background-color: var(--tg-theme-bg-color); border-radius: var(--border-radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 20px; transition: all 0.3s ease; }
         .form-group:last-child { margin-bottom: 0; }
-
-        label {
-            display: block; font-size: 11px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.8px;
-            margin-bottom: 8px; color: var(--text-secondary);
-            transition: color 0.3s ease, transform 0.3s ease;
-        }
-
-        .form-group:focus-within label {
-            color: var(--accent-light);
-            transform: translateX(2px);
-        }
-
-        /* === Validation indicators === */
-        .form-group .valid-icon {
-            position: absolute; right: 14px; top: 38px;
-            font-size: 14px; opacity: 0; transform: scale(0.5);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none;
-        }
-        .form-group.is-valid .valid-icon { opacity: 1; transform: scale(1); }
-        .form-group.is-valid input,
-        .form-group.is-valid select { border-color: rgba(0, 206, 201, 0.3); }
-        .form-group.is-invalid input,
-        .form-group.is-invalid select { animation: inputShake 0.4s ease; }
-        @keyframes inputShake {
-            0%,100% { transform: translateX(0); } 20% { transform: translateX(-4px); }
-            40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); }
-        }
-
-        /* === Inputs & Selects === */
-        input, select {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1.5px solid var(--border-subtle);
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 500;
-            background-color: var(--bg-input);
-            color: var(--text-primary);
-            box-sizing: border-box;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            -webkit-appearance: none;
-            appearance: none;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            outline: none;
-        }
-
-        input::placeholder {
-            color: var(--text-muted);
-            font-weight: 400;
-        }
-
-        input:focus, select:focus {
-            border-color: var(--accent);
-            background-color: var(--bg-input-focus);
-            box-shadow: 0 0 0 4px var(--accent-glow);
-            transform: scale(1.01);
-        }
-
-        select {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238a8ea8' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            background-size: 16px;
-            padding-right: 36px;
-            cursor: pointer;
-        }
-
-        select option {
-            background-color: var(--bg-card);
-            color: var(--text-primary);
-            padding: 10px;
-        }
-
-        /* === DOB Container === */
-        .dob-container {
-            display: flex;
-            gap: 8px;
-        }
-
-        .dob-container select {
-            flex: 1;
-            padding: 14px 8px;
-            text-align: center;
-            font-size: 14px;
-            background-position: right 6px center;
-            padding-right: 22px;
-        }
-
-        /* === Hidden === */
+        label { display: block; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; color: var(--tg-theme-hint-color); }
+        input, select { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); box-sizing: border-box; font-family: inherit; -webkit-appearance: none; }
         .hidden { display: none !important; }
 
-        /* === Result Screen === */
-        #resultScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            background-color: var(--bg-primary);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transform: translateY(100%);
-            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-            overflow: hidden;
-        }
+        .dob-container { display: flex; gap: 8px; }
+        .dob-container select { flex: 1; padding: 14px 8px; text-align: center; }
 
-        #resultScreen::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 400px;
-            height: 400px;
-            transform: translate(-50%, -50%);
-            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-            animation: resultPulse 3s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        @keyframes resultPulse {
-            0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
-            50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.15); }
-        }
-
+        #resultScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: var(--tg-theme-bg-color); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
         #resultScreen.active { transform: translateY(0); }
-
-        .ring-container {
-            position: relative;
-            width: 180px;
-            height: 180px;
-            margin-bottom: 30px;
-            z-index: 1;
-        }
-
-        .progress-ring {
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
-            filter: drop-shadow(0 0 12px var(--accent-glow));
-        }
-
-        .progress-ring__circle-bg {
-            stroke: rgba(255,255,255,0.06);
-        }
-
-        .progress-ring__circle {
-            stroke: var(--accent);
-            transition: stroke-dashoffset 0.1s linear, stroke 0.5s ease;
-            stroke-linecap: round;
-        }
-
-        .circle-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
-
-        .percent-num {
-            font-family: 'DM Serif Display', serif;
-            font-size: 48px;
-            font-weight: 400;
-            color: var(--text-primary);
-        }
-
-        .percent-label {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-secondary);
-            margin-top: -2px;
-        }
-
-        .result-text {
-            font-size: 16px;
-            font-weight: 500;
-            text-align: center;
-            padding: 0 32px;
-            line-height: 1.6;
-            color: var(--text-secondary);
-            opacity: 0;
-            transition: opacity 0.6s ease, transform 0.6s ease;
-            transform: translateY(20px);
-            z-index: 1;
-            max-width: 340px;
-        }
-
-        .result-text.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* === CTA Button on result screen === */
-        .result-cta {
-            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-            padding: 16px 36px; border-radius: 16px; border: none;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 16px; font-weight: 700; letter-spacing: 0.3px;
-            color: #fff; cursor: pointer; z-index: 1;
-            margin-top: 20px;
-            opacity: 0; transform: translateY(16px) scale(0.95);
-            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-            -webkit-tap-highlight-color: transparent;
-            text-decoration: none;
-            position: relative; overflow: hidden;
-        }
-        .result-cta.show { opacity: 1; transform: translateY(0) scale(1); }
-        .result-cta.high-btn {
-            background: linear-gradient(135deg, #00cec9 0%, #6c5ce7 100%);
-            box-shadow: 0 8px 30px rgba(0, 206, 201, 0.35);
-        }
-        .result-cta.medium-btn {
-            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-            color: #1a1a2e;
-            box-shadow: 0 8px 30px rgba(255, 234, 167, 0.3);
-        }
-        .result-cta.low-btn {
-            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
-            box-shadow: 0 8px 30px var(--accent-glow);
-        }
-        .result-cta:active { transform: scale(0.96) !important; }
-        .result-cta .cta-arrow {
-            font-size: 18px; transition: transform 0.3s ease;
-        }
-        .result-cta::after {
-            content: ''; position: absolute; top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%);
-            transform: rotate(25deg) translateX(-100%);
-            animation: ctaShimmer 3s 1s infinite;
-        }
-        @keyframes ctaShimmer {
-            0% { transform: rotate(25deg) translateX(-100%); }
-            30% { transform: rotate(25deg) translateX(100%); }
-            100% { transform: rotate(25deg) translateX(100%); }
-        }
-
-        /* === Step indicator dots === */
-        .step-dots {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            margin-bottom: 24px;
-            animation: floatIn 0.8s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .step-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text-muted);
-            opacity: 0.3;
-            transition: all 0.4s ease;
-        }
-
-        .step-dot.active {
-            opacity: 1;
-            background: var(--accent);
-            box-shadow: 0 0 10px var(--accent-glow);
-            transform: scale(1.2);
-        }
-
-        .step-dot.done {
-            opacity: 0.7;
-            background: var(--success);
-        }
-
-        /* === Footer spacer === */
-        .footer-spacer { height: 24px; }
-
-        /* === Celebration effects === */
-        .result-emoji-burst {
-            position: absolute;
-            font-size: 32px;
-            pointer-events: none;
-            z-index: 3;
-            animation: emojiFly 2s ease-out forwards;
-        }
-
-        @keyframes emojiFly {
-            0% { opacity: 1; transform: translate(0, 0) scale(0.3) rotate(0deg); }
-            50% { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1.2) rotate(180deg); }
-            100% { opacity: 0; transform: translate(var(--tx2), var(--ty2)) scale(0.5) rotate(360deg); }
-        }
-
-        .ring-container.celebrate {
-            animation: ringCelebrate 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        @keyframes ringCelebrate {
-            0% { transform: scale(1); }
-            30% { transform: scale(1.15); }
-            60% { transform: scale(0.95); }
-            100% { transform: scale(1); }
-        }
-
-        .glow-burst {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 300px;
-            height: 300px;
-            transform: translate(-50%, -50%) scale(0);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-            animation: glowBurst 1.2s ease-out forwards;
-        }
-
-        @keyframes glowBurst {
-            0% { transform: translate(-50%, -50%) scale(0); opacity: 0.8; }
-            50% { opacity: 0.4; }
-            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
-        }
-
-        .stars-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 2;
-            overflow: hidden;
-        }
-
-        .star-particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: starFloat 2.5s ease-out forwards;
-        }
-
-        @keyframes starFloat {
-            0% { opacity: 1; transform: translate(0, 0) scale(1); }
-            100% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0); }
-        }
-
-        .result-badge {
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 16px;
-            opacity: 0;
-            transform: translateY(10px) scale(0.9);
-            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-            z-index: 1;
-        }
-
-        .result-badge.show {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-
-        .result-badge.high {
-            background: rgba(0, 206, 201, 0.15);
-            color: #00cec9;
-            border: 1px solid rgba(0, 206, 201, 0.3);
-        }
-
-        .result-badge.medium {
-            background: rgba(255, 234, 167, 0.15);
-            color: #ffeaa7;
-            border: 1px solid rgba(255, 234, 167, 0.3);
-        }
-
-        .result-badge.low {
-            background: rgba(255, 107, 107, 0.15);
-            color: #ff6b6b;
-            border: 1px solid rgba(255, 107, 107, 0.3);
-        }
-
-        /* Ring glow on completion */
-        .ring-container.glow-high .progress-ring {
-            filter: drop-shadow(0 0 24px rgba(0, 206, 201, 0.5));
-        }
-
-        .ring-container.glow-medium .progress-ring {
-            filter: drop-shadow(0 0 24px rgba(255, 234, 167, 0.4));
-        }
-
-        .ring-container.glow-low .progress-ring {
-            filter: drop-shadow(0 0 24px rgba(255, 107, 107, 0.4));
-        }
-
-        /* === Scrollbar === */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 2px; }
-
-        /* === Subtle noise texture === */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.015;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-        }
+        .ring-container { position: relative; width: 180px; height: 180px; margin-bottom: 30px; }
+        .progress-ring { transform: rotate(-90deg); transform-origin: 50% 50%; }
+        .progress-ring__circle-bg { stroke: var(--tg-theme-secondary-bg-color); }
+        .progress-ring__circle { stroke: var(--tg-theme-button-color); transition: stroke-dashoffset 0.1s linear, stroke 0.5s ease; }
+        .circle-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+        .percent-num { font-size: 48px; font-weight: 800; color: var(--tg-theme-text-color); }
+        .percent-label { font-size: 14px; font-weight: 600; color: var(--tg-theme-hint-color); margin-top: -5px; }
+        .result-text { font-size: 17px; font-weight: 600; text-align: center; padding: 0 24px; line-height: 1.5; opacity: 0; transition: opacity 0.5s ease; transform: translateY(20px); }
+        .result-text.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body>
-    <!-- SKELETON -->
-    <div id="skeletonScreen">
-        <div class="skeleton-content">
-            <div class="skeleton-logo"></div>
-            <div class="skeleton-block skeleton-hero"></div>
-            <div class="skeleton-block skeleton-label"></div>
-            <div class="skeleton-block skeleton-input"></div>
-            <div class="skeleton-block skeleton-label"></div>
-            <div class="skeleton-block skeleton-input"></div>
-            <div class="skeleton-block skeleton-card"></div>
-        </div>
-    </div>
-
     <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
 
     <div id="formContainer">
-        <!-- Hero -->
-        <div class="hero">
-            <div class="hero-icon">🎓</div>
-            <h1>Abituriyent Anketasi</h1>
-            <p>Chet elda o'qish imkoniyatingizni bilib oling</p>
-        </div>
-
-        <!-- Step dots -->
-        <div class="step-dots">
-            <div class="step-dot active" id="dot1"></div>
-            <div class="step-dot" id="dot2"></div>
-            <div class="step-dot" id="dot3"></div>
-        </div>
-
-        <!-- SECTION 1 -->
-        <div class="form-section visible" id="section1">
-        <h2>Shaxsiy ma'lumotlar</h2>
+        <h2>Shaxsiy ma'lumotlar 👤</h2>
         <div class="card">
-            <div class="form-group" id="fg-fullName"><label>To'liq Ism va Familiya 📝</label><input type="text" id="fullName" placeholder="Alisher Navoiy"><span class="valid-icon">✅</span></div>
+            <div class="form-group"><label>To’liq Ism va Familiya 📝</label><input type="text" id="fullName" placeholder="Alisher Navoiy"></div>
             
-            <div class="form-group" id="fg-dob">
-                <label>Tug'ilgan sana 📅</label>
+            <div class="form-group">
+                <label>Tug’ilgan sana 📅</label>
                 <div class="dob-container">
                     <select id="dobDay" onchange="validate()"><option value="" disabled selected>Kun</option></select>
                     <select id="dobMonth" onchange="validate()"><option value="" disabled selected>Oy</option></select>
                     <select id="dobYear" onchange="validate()"><option value="" disabled selected>Yil</option></select>
                 </div>
-                <span class="valid-icon">✅</span>
             </div>
 
-            <div class="form-group" id="fg-phone"><label>Telefon raqam 📱</label><input type="tel" id="phone" placeholder="+998 (90) 123-45-67" value="+998 "><span class="valid-icon">✅</span></div>
-        </div>
+            <div class="form-group"><label>Telefon raqam 📱</label><input type="tel" id="phone" placeholder="+998 (90) 123-45-67" value="+998 "></div>
         </div>
 
-        <!-- SECTION 2 -->
-        <div class="form-section" id="section2">
-        <h2>Ta'lim va Baholar</h2>
+        <h2>Ta'lim va Baholar 📚</h2>
         <div class="card">
-            <div class="form-group" id="fg-currentStudy">
+            <div class="form-group">
                 <label>Hozirgi holatingiz 🏫</label>
                 <select id="currentStudy" onchange="toggleStudyOptions()">
                     <option value="" disabled selected>Tanlang...</option>
@@ -703,16 +75,12 @@
                     <option value="Universitet talabasiman">Universitet talabasiman</option>
                     <option value="Universitetni bitirganman">Universitetni bitirganman</option>
                 </select>
-                <span class="valid-icon">✅</span>
             </div>
             <div class="form-group hidden" id="studySubGroup"><label id="studySubLabel">Sinf / Kurs</label><select id="studySubSelect" onchange="validate()"></select></div>
-            <div class="form-group" id="fg-gpa"><label>O'rtacha baho / GPA</label><input type="text" id="gpa" placeholder="Masalan: 4.5 yoki 85%"><span class="valid-icon">✅</span></div>
-        </div>
+            <div class="form-group"><label>O’rtacha baho / GPA</label><input type="text" id="gpa" placeholder="Masalan: 4.5 yoki 85%"></div>
         </div>
 
-        <!-- SECTION 3 -->
-        <div class="form-section" id="section3">
-        <h2>Sertifikat va Yo'nalish</h2>
+        <h2>Sertifikat va Yo'nalish 🌍</h2>
         <div class="card">
             <div class="form-group">
                 <label>Til sertifikati 📜</label>
@@ -746,18 +114,17 @@
                 <input type="text" id="satScoreInput" inputmode="numeric" placeholder="Masalan: 1450">
             </div>
 
-            <div class="form-group" id="fg-fieldOfStudy"><label>Tanlangan soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes..."><span class="valid-icon">✅</span></div>
+            <div class="form-group"><label>Tanlangan soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes..."></div>
 
-            <div class="form-group" id="fg-country">
+            <div class="form-group">
                 <label>Qaysi davlatga? ✈️</label>
                 <select id="country">
                     <option value="" disabled selected>Tanlang...</option>
                     <option value="Italiya">Italiya</option>
                     <option value="Germaniya">Germaniya</option>
                 </select>
-                <span class="valid-icon">✅</span>
             </div>
-            <div class="form-group" id="fg-finalStage">
+            <div class="form-group">
                 <label>Topshiriladigan daraja 🎓</label>
                 <select id="finalStage" onchange="validate()">
                     <option value="" disabled selected>Tanlang...</option>
@@ -765,31 +132,21 @@
                     <option value="Bachelors">Bachelors (Bakalavr)</option>
                     <option value="Masters">Masters (Magistr)</option>
                 </select>
-                <span class="valid-icon">✅</span>
             </div>
         </div>
-        </div>
-
-        <div class="footer-spacer"></div>
     </div>
 
     <div id="resultScreen">
-        <div class="ring-container" id="ringContainer">
+        <div class="ring-container">
             <svg class="progress-ring" width="180" height="180">
-               <circle class="progress-ring__circle-bg" stroke-width="10" fill="transparent" r="80" cx="90" cy="90"/>
-               <circle id="animCircle" class="progress-ring__circle" stroke-width="10" fill="transparent" r="80" cx="90" cy="90"/>
+               <circle class="progress-ring__circle-bg" stroke-width="12" fill="transparent" r="80" cx="90" cy="90"/>
+               <circle id="animCircle" class="progress-ring__circle" stroke-width="12" fill="transparent" r="80" cx="90" cy="90"/>
             </svg>
             <div class="circle-content"><div class="percent-num" id="percentNum">0%</div><div class="percent-label">Imkoniyat</div></div>
         </div>
-        <div class="result-badge" id="resultBadge"></div>
         <div class="result-text" id="resultText">Hisoblanmoqda...</div>
-        <button class="result-cta" id="resultCta" onclick="handleCtaClick()">
-            <span id="ctaLabel">Batafsil</span>
-            <span class="cta-arrow">→</span>
-        </button>
     </div>
 
-    <!-- ============ ALL LOGIC BELOW IS 100% ORIGINAL — UNTOUCHED ============ -->
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
@@ -806,9 +163,9 @@
         function setProgress(percent) {
             const offset = circumference - (percent / 100 * circumference);
             circle.style.strokeDashoffset = offset;
-            if (percent < 30) circle.style.stroke = '#ff6b6b';
-            else if (percent > 70) circle.style.stroke = '#00cec9';
-            else circle.style.stroke = '#ffeaa7';
+            if (percent < 30) circle.style.stroke = '#ff3b30';
+            else if (percent > 70) circle.style.stroke = '#34c759';
+            else circle.style.stroke = '#ffcc00';
         }
 
         function safeVibrate(type) {
@@ -819,38 +176,6 @@
                 else if (type === 'error' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('error');
                 else if (type === 'medium' && tg.HapticFeedback.impactOccurred) tg.HapticFeedback.impactOccurred('medium');
             } catch (e) {}
-        }
-
-        // === SKELETON → FORM TRANSITION ===
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                document.getElementById('skeletonScreen').classList.add('hide');
-                document.getElementById('formContainer').classList.add('loaded');
-            }, 800);
-        });
-
-        // === SECTION REVEAL ===
-        function updateSectionVisibility() {
-            const s1 = ['fullName','dobDay','dobMonth','dobYear','phone'];
-            const s1f = s1.filter(id => {
-                const el = document.getElementById(id);
-                if (id === 'phone') return el.value.replace(/\D/g, '').length >= 12;
-                return el && el.value && String(el.value).trim() !== '';
-            }).length;
-            const s2f = ['currentStudy','gpa'].filter(id => {
-                const el = document.getElementById(id);
-                return el && el.value && String(el.value).trim() !== '';
-            }).length;
-            if (s1f >= 3) document.getElementById('section2').classList.add('visible');
-            if (s2f >= 1) document.getElementById('section3').classList.add('visible');
-        }
-
-        // === FIELD VALIDATION UI ===
-        function updateFieldStatus(id, valid) {
-            const fg = document.getElementById('fg-' + id);
-            if (!fg) return;
-            if (valid) { fg.classList.add('is-valid'); fg.classList.remove('is-invalid'); }
-            else { fg.classList.remove('is-valid'); }
         }
 
         const dobDay = document.getElementById('dobDay');
@@ -949,9 +274,11 @@
             const checkField = (id) => {
                 totalCount++;
                 const el = document.getElementById(id);
-                const valid = el && el.value && String(el.value).trim() !== "" && String(el.value) !== "N/A";
-                if (valid) { filledCount++; } else { isValid = false; }
-                updateFieldStatus(id, valid);
+                if (el && el.value && String(el.value).trim() !== "" && String(el.value) !== "N/A") {
+                    filledCount++;
+                } else {
+                    isValid = false;
+                }
             };
 
             checkField("fullName"); checkField("currentStudy"); checkField("gpa");
@@ -964,28 +291,13 @@
 
             totalCount++;
             const phoneDigits = document.getElementById("phone").value.replace(/\D/g, '').length;
-            const phoneValid = phoneDigits >= 12;
-            if (phoneValid) filledCount++; else isValid = false;
-            updateFieldStatus('phone', phoneValid);
-
-            // DOB combined
-            const dobValid = document.getElementById('dobDay').value && document.getElementById('dobMonth').value && document.getElementById('dobYear').value;
-            updateFieldStatus('dob', !!dobValid);
+            if (phoneDigits >= 12) filledCount++; else isValid = false;
 
             if (!finalPayload) {
-                tg.MainButton.setParams({ color: isValid ? "#6c5ce7" : "#c4c4c6", is_active: isValid, text: "YUBORISH" });
+                tg.MainButton.setParams({ color: isValid ? "#007aff" : "#c4c4c6", is_active: isValid, text: "YUBORISH" });
                 if (isValid) tg.MainButton.show();
             }
             document.getElementById('progressBar').style.width = (filledCount / totalCount * 100) + "%";
-
-            // Update step dots
-            const progress = filledCount / totalCount;
-            document.getElementById('dot1').className = 'step-dot' + (progress >= 0.33 ? ' done' : ' active');
-            document.getElementById('dot2').className = 'step-dot' + (progress >= 0.66 ? ' done' : (progress >= 0.33 ? ' active' : ''));
-            document.getElementById('dot3').className = 'step-dot' + (progress >= 1 ? ' done' : (progress >= 0.66 ? ' active' : ''));
-
-            // Reveal sections
-            updateSectionVisibility();
         }
 
         document.querySelectorAll('input, select').forEach(el => { el.addEventListener('input', validate); el.addEventListener('change', validate); });
@@ -1032,113 +344,75 @@
             
             let prob = 0; 
             let useSatLogic = (level === "Bachelors" && hasSat && country !== "Germaniya");
-            let certLevel = hasCert ? document.getElementById("certScoreSelect").value : "None";
-            let isGerman = (certType === "Nemis tili sertifikati");
-            let isGermany = (country === "Germaniya");
 
-            // === Определяем силу сертификата ===
-            // Для Германии: немецкий C1+ = сильный, B2 = средний, B1 = слабый
-            // Для Германии: английский работает, но слабее немецкого (-10%)
-            // Для Италии: немецкий = бесполезен, IELTS/TOEFL B2+ = сильный
-            let certStrength = "none"; // none | weak | medium | strong
-            
-            if (!hasCert) {
-                certStrength = "none";
-            } else if (isGermany) {
-                if (isGerman) {
-                    // Немецкий для Германии
-                    if (certLevel === "C1" || certLevel === "C2") certStrength = "strong";
-                    else if (certLevel === "B2") certStrength = "medium";
-                    else certStrength = "weak"; // B1
-                } else {
-                    // Английский для Германии (подходит, но хуже)
-                    if (certLevel === "C1" || certLevel === "C2") certStrength = "medium";
-                    else if (certLevel === "B2") certStrength = "weak";
-                    else certStrength = "weak"; // B1
-                }
-            } else {
-                // Италия
-                if (isGerman) {
-                    certStrength = "none"; // Немецкий для Италии бесполезен
-                } else {
-                    if (certLevel === "C1" || certLevel === "C2") certStrength = "strong";
-                    else if (certLevel === "B2") certStrength = "medium";
-                    else certStrength = "weak"; // B1
-                }
+            // 🔥 Бонус за уровень сертификата
+            let certBonus = 0;
+            if (hasCert) {
+                if (certScore === "C2") certBonus = 8;
+                else if (certScore === "C1") certBonus = 5;
+                else if (certScore === "B2") certBonus = 2;
+                else if (certScore === "B1") certBonus = 0;
             }
-
-            // === РАСЧЁТ ВЕРОЯТНОСТИ ===
 
             if (useSatLogic) {
-                // SAT + Bachelors (не Германия)
                 let satVal = parseInt(satScoreInput) || 0;
-                if (certStrength === "strong") {
-                    if (satVal >= 1400) prob = getRandom(88, 95); else if (satVal >= 1200) prob = getRandom(80, 88); else if (satVal >= 1000) prob = getRandom(70, 80); else prob = getRandom(60, 70);
-                } else if (certStrength === "medium") {
-                    if (satVal >= 1400) prob = getRandom(75, 85); else if (satVal >= 1200) prob = getRandom(65, 75); else prob = getRandom(55, 65);
-                } else {
-                    // weak/none + SAT
-                    if (satVal >= 1400) prob = getRandom(45, 55); else prob = getRandom(30, 45);
-                }
-
+                if (satVal >= 1400) prob = getRandom(90, 95);
+                else if (satVal >= 1200) prob = getRandom(85, 90);
+                else if (satVal >= 1000) prob = getRandom(78, 85);
+                else prob = getRandom(70, 78);
+                prob += certBonus;
             } else if (level === "Masters") {
-                // === MASTERS ===
-                if (certStrength === "strong") {
-                    if (gpaVal > 4.3) prob = getRandom(82, 92); else if (gpaVal >= 3.5) prob = getRandom(72, 82); else if (gpaVal >= 3.0) prob = getRandom(62, 72); else prob = getRandom(35, 50);
-                } else if (certStrength === "medium") {
-                    if (gpaVal > 4.3) prob = getRandom(60, 68); else if (gpaVal >= 3.5) prob = getRandom(52, 62); else if (gpaVal >= 3.0) prob = getRandom(42, 55); else prob = getRandom(25, 38);
-                } else if (certStrength === "weak") {
-                    if (gpaVal > 4.3) prob = getRandom(35, 48); else if (gpaVal >= 3.0) prob = getRandom(20, 35); else prob = getRandom(10, 22);
-                } else {
-                    // Нет сертификата
-                    if (gpaVal > 4.3) prob = getRandom(15, 25); else prob = getRandom(5, 18);
-                }
-
+                // Masters: GPA и сертификат оба важны
+                if (gpaVal >= 4.5) prob = getRandom(88, 95);
+                else if (gpaVal >= 4.0) prob = getRandom(82, 90);
+                else if (gpaVal >= 3.5) prob = getRandom(75, 85);
+                else if (gpaVal >= 3.0) prob = getRandom(65, 78);
+                else prob = getRandom(30, 55);
+                prob += certBonus;
             } else if (level === "Foundation") {
-                // === FOUNDATION (проще поступить) ===
-                if (certStrength === "strong") {
-                    if (gpaVal > 4.0) prob = getRandom(82, 92); else if (gpaVal > 3.0) prob = getRandom(70, 82); else prob = getRandom(50, 65);
-                } else if (certStrength === "medium") {
-                    if (gpaVal > 4.0) prob = getRandom(62, 72); else if (gpaVal > 3.0) prob = getRandom(52, 65); else prob = getRandom(35, 50);
-                } else if (certStrength === "weak") {
-                    if (gpaVal > 4.0) prob = getRandom(38, 50); else if (gpaVal > 3.0) prob = getRandom(25, 40); else prob = getRandom(12, 25);
-                } else {
-                    prob = getRandom(8, 18);
+                // Foundation: более лёгкий порог
+                if (!hasCert) prob = getRandom(25, 40);
+                else {
+                    if (gpaVal >= 4.0) prob = getRandom(82, 92);
+                    else if (gpaVal >= 3.0) prob = getRandom(72, 85);
+                    else prob = getRandom(50, 70);
+                    prob += certBonus;
                 }
-
             } else {
-                // === BACHELORS (без SAT) ===
-                if (certStrength === "strong") {
-                    if (gpaVal > 4.0) {
-                        if (subStudy === "9-sinf") prob = getRandom(68, 78); else if (subStudy === "10-sinf") prob = getRandom(76, 86); else prob = getRandom(78, 90);
-                    } else if (gpaVal > 3.0) {
-                        if (subStudy === "9-sinf") prob = getRandom(58, 68); else prob = getRandom(62, 75);
-                    } else {
-                        prob = getRandom(35, 50);
-                    }
-                } else if (certStrength === "medium") {
-                    if (gpaVal > 4.0) {
-                        if (subStudy === "9-sinf") prob = getRandom(52, 62); else if (subStudy === "10-sinf") prob = getRandom(55, 65); else prob = getRandom(58, 68);
-                    } else if (gpaVal > 3.0) {
-                        prob = getRandom(42, 55);
-                    } else {
-                        prob = getRandom(25, 38);
-                    }
-                } else if (certStrength === "weak") {
-                    if (gpaVal > 4.0) prob = getRandom(35, 48); else if (gpaVal > 3.0) prob = getRandom(22, 38); else prob = getRandom(10, 22);
-                } else {
-                    // Нет сертификата
-                    prob = getRandom(8, 18);
+                // Bachelors (без SAT)
+                if (!hasCert) prob = getRandom(15, 25);
+                else {
+                    if (gpaVal >= 4.5) {
+                        if (subStudy === "9-sinf") prob = getRandom(68, 76);
+                        else if (subStudy === "10-sinf") prob = getRandom(72, 82);
+                        else prob = getRandom(82, 92);
+                    } else if (gpaVal >= 4.0) {
+                        if (subStudy === "9-sinf") prob = getRandom(62, 72);
+                        else if (subStudy === "10-sinf") prob = getRandom(68, 78);
+                        else prob = getRandom(78, 88);
+                    } else if (gpaVal >= 3.5) {
+                        if (subStudy === "9-sinf") prob = getRandom(55, 65);
+                        else if (subStudy === "10-sinf") prob = getRandom(62, 72);
+                        else prob = getRandom(72, 82);
+                    } else if (gpaVal >= 3.0) {
+                        if (subStudy === "9-sinf") prob = getRandom(48, 58);
+                        else if (subStudy === "10-sinf") prob = getRandom(52, 64);
+                        else prob = getRandom(62, 74);
+                    } else prob = getRandom(30, 55);
+                    prob += certBonus;
                 }
             }
+
+            // Ограничиваем максимум 97%
+            if (prob > 97) prob = 97;
 
             let msgText = ""; let btnText = ""; window.targetBtnLink = "";
             if (prob >= 65) {
-                msgText = "Sizda katta potensial bor chempion. Agar to'g'ri strategiya bilan topshirsangiz aniq shu yil o'qishga kira olasiz. 🤩";
-                btnText = "Batafsil ma'lumot olish"; window.targetBtnLink = "https://t.me/+h7kFTc61fkkyMjFi"; 
+                msgText = "Sizda katta potensial bor chempion. Agar to’g’ri strategiya bilan topshirsangiz aniq shu yil o’qishga kira olasiz. 🤩";
+                btnText = "Batafsil ma'lumot olish"; window.targetBtnLink = "https://t.me/Muhammadkhuja_org"; 
             } else {
-                msgText = "Sizda katta imkoniyat bor, faqat natijangiz ustida ozroq ishlashimiz kerak chempion. Kanalda bepul strategiyani qo'lga kiriting va orzuyingizga erishing! 💪";
-                btnText = "Kanalga a'zo bo'lish!"; window.targetBtnLink = "https://t.me/+h7kFTc61fkkyMjFi"; 
+                msgText = "Sizda katta imkoniyat bor, faqat natijangiz ustida ozroq ishlashimiz kerak chempion. Kanalda bepul strategiyani qo’lga kiriting va orzuyingizga erishing! 💪";
+                btnText = "Kanalga a'zo bo'lish!"; window.targetBtnLink = "https://t.me/Muhammadkhuja_org"; 
             }
 
             let finalCertStr = certType; let finalScoreStr = certScore;
@@ -1177,320 +451,26 @@
             document.getElementById("resultScreen").classList.add("active");
             tg.MainButton.hide();
 
-            // Init audio context on user gesture
-            try { getAudioCtx(); } catch(e) {}
-
             let currentNum = 0; let speed = 25; 
-            tickCounter = 0;
             let interval = setInterval(() => {
                 currentNum++;
-                tickCounter++;
                 document.getElementById("percentNum").innerText = currentNum + "%";
                 setProgress(currentNum); safeVibrate('tick');
                 
-                // Play subtle tick every 5th count
-                if (tickCounter % 5 === 0) playTick();
-                
                 if (currentNum >= prob) {
                     clearInterval(interval);
-                    playDone(); // iOS-style completion chime
                     document.getElementById("resultText").innerText = msgText;
                     document.getElementById("resultText").classList.add("show");
                     
-                    // --- CELEBRATION SYSTEM ---
-                    const ringEl = document.getElementById('ringContainer');
-                    const badge = document.getElementById('resultBadge');
-                    const resultScreen = document.getElementById('resultScreen');
-                    
-                    ringEl.classList.add('celebrate');
-
-                    // 🎵 Audio split: synth fanfare for 65%+, mp3 for <65%
-                    if (prob >= 65) {
-                        playVictoryFanfare();
-                    } else {
-                        playMotivationAudio();
-                    }
-
-                    if (prob >= 70) {
-                        // 🎉 HIGH — Epic celebration
-                        ringEl.classList.add('glow-high');
-                        badge.textContent = '🔥 Ajoyib natija!';
-                        badge.className = 'result-badge high';
-
-                        // Multi-wave confetti
-                        try {
-                            if (window.confetti) {
-                                // Wave 1 — center burst
-                                confetti({ particleCount: 100, spread: 70, origin: { y: 0.5 }, colors: ['#00cec9', '#6c5ce7', '#a29bfe', '#74b9ff', '#ffffff'] });
-                                // Wave 2 — sides
-                                setTimeout(() => {
-                                    confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: 0.6 }, colors: ['#00cec9', '#6c5ce7', '#a29bfe'] });
-                                    confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1, y: 0.6 }, colors: ['#00cec9', '#6c5ce7', '#a29bfe'] });
-                                }, 300);
-                                // Wave 3 — rain
-                                setTimeout(() => {
-                                    confetti({ particleCount: 40, spread: 100, origin: { y: 0.3 }, gravity: 0.6, scalar: 1.2, colors: ['#ffeaa7', '#00cec9', '#ffffff'] });
-                                }, 700);
-                            }
-                        } catch(e){}
-
-                        // Glow burst
-                        const glow = document.createElement('div');
-                        glow.className = 'glow-burst';
-                        glow.style.background = 'radial-gradient(circle, rgba(0,206,201,0.4) 0%, transparent 70%)';
-                        resultScreen.appendChild(glow);
-
-                        // Emoji burst
-                        spawnEmojiBurst(resultScreen, ['🎓', '🌟', '🔥', '🚀', '✨', '🎉', '💫'], 10);
-                        
-                        // Star particles
-                        spawnStars(resultScreen, '#00cec9', 30);
-
+                    if (prob >= 75) {
+                        try { if (window.confetti) confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } }); } catch(e){}
                         safeVibrate('success');
-
-                    } else if (prob >= 40) {
-                        // 💪 MEDIUM — Encouraging
-                        ringEl.classList.add('glow-medium');
-                        badge.textContent = '💪 Yaxshi imkoniyat!';
-                        badge.className = 'result-badge medium';
-
-                        try {
-                            if (window.confetti) {
-                                confetti({ particleCount: 50, spread: 60, origin: { y: 0.55 }, colors: ['#ffeaa7', '#6c5ce7', '#a29bfe'] });
-                                setTimeout(() => {
-                                    confetti({ particleCount: 30, spread: 80, origin: { y: 0.4 }, gravity: 0.8, colors: ['#ffeaa7', '#ffffff'] });
-                                }, 400);
-                            }
-                        } catch(e){}
-
-                        const glow = document.createElement('div');
-                        glow.className = 'glow-burst';
-                        glow.style.background = 'radial-gradient(circle, rgba(255,234,167,0.3) 0%, transparent 70%)';
-                        resultScreen.appendChild(glow);
-
-                        spawnEmojiBurst(resultScreen, ['💪', '⭐', '📚', '✨'], 6);
-                        spawnStars(resultScreen, '#ffeaa7', 15);
-
-                        playWarning();
-                        safeVibrate('warning');
-
-                    } else {
-                        // 📚 LOW — Motivational
-                        ringEl.classList.add('glow-low');
-                        badge.textContent = '📚 Biz yordam beramiz!';
-                        badge.className = 'result-badge low';
-
-                        const glow = document.createElement('div');
-                        glow.className = 'glow-burst';
-                        glow.style.background = 'radial-gradient(circle, rgba(255,107,107,0.2) 0%, transparent 70%)';
-                        resultScreen.appendChild(glow);
-
-                        spawnStars(resultScreen, '#ff6b6b', 8);
-                        playError();
-                        safeVibrate('error');
-                    }
-
-                    setTimeout(() => { badge.classList.add('show'); }, 200);
-
-                    // Show CTA button
-                    const cta = document.getElementById('resultCta');
-                    const ctaLabel = document.getElementById('ctaLabel');
-                    ctaLabel.textContent = btnText;
-                    cta.className = 'result-cta';
-                    if (prob >= 70) cta.classList.add('high-btn');
-                    else if (prob >= 40) cta.classList.add('medium-btn');
-                    else cta.classList.add('low-btn');
-                    setTimeout(() => { cta.classList.add('show'); }, 600);
+                    } else { safeVibrate(prob > 40 ? 'warning' : 'error'); }
+                    
+                    setTimeout(() => { tg.MainButton.setParams({ text: btnText, color: "#34c759", is_active: true }); tg.MainButton.show(); }, 500);
                 }
             }, speed);
         });
-        // === CTA BUTTON HANDLER ===
-        function handleCtaClick() {
-            safeVibrate('medium');
-            if (window.targetBtnLink) {
-                tg.openTelegramLink(window.targetBtnLink);
-            }
-            setTimeout(() => { tg.close(); }, 150);
-        }
-
-        // === AUDIO SYSTEM ===
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        let audioCtx = null;
-
-        function getAudioCtx() {
-            if (!audioCtx) audioCtx = new AudioCtx();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            return audioCtx;
-        }
-
-        // iOS-style tactile tick sound (subtle click)
-        function playTick() {
-            try {
-                const ctx = getAudioCtx();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(1200, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.02);
-                gain.gain.setValueAtTime(0.03, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.03);
-            } catch(e) {}
-        }
-
-        // iOS-style "done" chime (two-tone confirmation)
-        function playDone() {
-            try {
-                const ctx = getAudioCtx();
-                // Note 1
-                const osc1 = ctx.createOscillator();
-                const g1 = ctx.createGain();
-                osc1.connect(g1); g1.connect(ctx.destination);
-                osc1.type = 'sine';
-                osc1.frequency.value = 880;
-                g1.gain.setValueAtTime(0.12, ctx.currentTime);
-                g1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-                osc1.start(ctx.currentTime);
-                osc1.stop(ctx.currentTime + 0.15);
-                // Note 2 (higher)
-                const osc2 = ctx.createOscillator();
-                const g2 = ctx.createGain();
-                osc2.connect(g2); g2.connect(ctx.destination);
-                osc2.type = 'sine';
-                osc2.frequency.value = 1320;
-                g2.gain.setValueAtTime(0.12, ctx.currentTime + 0.1);
-                g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-                osc2.start(ctx.currentTime + 0.1);
-                osc2.stop(ctx.currentTime + 0.3);
-            } catch(e) {}
-        }
-
-        // iOS-style warning tone
-        function playWarning() {
-            try {
-                const ctx = getAudioCtx();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain); gain.connect(ctx.destination);
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(520, ctx.currentTime);
-                osc.frequency.setValueAtTime(480, ctx.currentTime + 0.12);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.25);
-            } catch(e) {}
-        }
-
-        // iOS-style soft error
-        function playError() {
-            try {
-                const ctx = getAudioCtx();
-                for (let i = 0; i < 2; i++) {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.connect(gain); gain.connect(ctx.destination);
-                    osc.type = 'sine';
-                    osc.frequency.value = 330;
-                    const t = ctx.currentTime + i * 0.12;
-                    gain.gain.setValueAtTime(0.08, t);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-                    osc.start(t);
-                    osc.stop(t + 0.1);
-                }
-            } catch(e) {}
-        }
-
-        // 🔥 Motivation mp3 — plays for results BELOW 65%
-        const motivationAudio = new Audio('https://timfounder.github.io/abiturient/atlet.mp3');
-        motivationAudio.preload = 'auto';
-        motivationAudio.volume = 0.8;
-        function playMotivationAudio() {
-            try { motivationAudio.currentTime = 0; motivationAudio.play(); } catch(e) {}
-        }
-
-        // 🎉 Synth victory fanfare — plays for results 65%+
-        function playVictoryFanfare() {
-            try {
-                const ctx = getAudioCtx();
-                [523.25, 659.25, 783.99].forEach(freq => {
-                    const o=ctx.createOscillator(),g=ctx.createGain();
-                    o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=freq;
-                    g.gain.setValueAtTime(0,ctx.currentTime);g.gain.linearRampToValueAtTime(0.08,ctx.currentTime+0.05);
-                    g.gain.setValueAtTime(0.08,ctx.currentTime+0.3);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.8);
-                    o.start(ctx.currentTime);o.stop(ctx.currentTime+0.8);
-                });
-                [523.25,659.25,783.99,1046.5].forEach((freq,i) => {
-                    const o=ctx.createOscillator(),g=ctx.createGain();
-                    o.connect(g);g.connect(ctx.destination);o.type='triangle';o.frequency.value=freq;
-                    const t=ctx.currentTime+0.15+i*0.1;
-                    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.1,t+0.03);
-                    g.gain.exponentialRampToValueAtTime(0.001,t+0.35);
-                    o.start(t);o.stop(t+0.35);
-                });
-                const s=ctx.createOscillator(),sg=ctx.createGain();
-                s.connect(sg);sg.connect(ctx.destination);s.type='sine';
-                s.frequency.setValueAtTime(2093,ctx.currentTime+0.6);
-                s.frequency.exponentialRampToValueAtTime(3000,ctx.currentTime+1.0);
-                sg.gain.setValueAtTime(0,ctx.currentTime+0.6);
-                sg.gain.linearRampToValueAtTime(0.04,ctx.currentTime+0.65);
-                sg.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+1.2);
-                s.start(ctx.currentTime+0.6);s.stop(ctx.currentTime+1.2);
-            } catch(e) {}
-        }
-
-        // Counting tick sound (every 5th number — not every tick to avoid spam)
-        let tickCounter = 0;
-
-        // === CELEBRATION HELPERS ===
-        function spawnEmojiBurst(container, emojis, count) {
-            for (let i = 0; i < count; i++) {
-                setTimeout(() => {
-                    const el = document.createElement('div');
-                    el.className = 'result-emoji-burst';
-                    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                    el.style.top = '45%';
-                    el.style.left = '50%';
-                    const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5);
-                    const dist = 80 + Math.random() * 120;
-                    const dist2 = dist + 40 + Math.random() * 60;
-                    el.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
-                    el.style.setProperty('--ty', Math.sin(angle) * dist - 40 + 'px');
-                    el.style.setProperty('--tx2', Math.cos(angle) * dist2 + 'px');
-                    el.style.setProperty('--ty2', Math.sin(angle) * dist2 + 60 + 'px');
-                    container.appendChild(el);
-                    setTimeout(() => el.remove(), 2200);
-                }, i * 60);
-            }
-        }
-
-        function spawnStars(container, color, count) {
-            const starsDiv = document.createElement('div');
-            starsDiv.className = 'stars-container';
-            container.appendChild(starsDiv);
-            for (let i = 0; i < count; i++) {
-                setTimeout(() => {
-                    const star = document.createElement('div');
-                    star.className = 'star-particle';
-                    star.style.background = color;
-                    star.style.boxShadow = `0 0 6px ${color}`;
-                    star.style.left = Math.random() * 100 + '%';
-                    star.style.top = Math.random() * 100 + '%';
-                    const sx = (Math.random() - 0.5) * 200;
-                    const sy = (Math.random() - 0.5) * 200;
-                    star.style.setProperty('--sx', sx + 'px');
-                    star.style.setProperty('--sy', sy + 'px');
-                    star.style.width = (2 + Math.random() * 4) + 'px';
-                    star.style.height = star.style.width;
-                    starsDiv.appendChild(star);
-                    setTimeout(() => star.remove(), 2800);
-                }, i * 40);
-            }
-            setTimeout(() => starsDiv.remove(), 3500);
-        }
     </script>
 </body>
 </html>
