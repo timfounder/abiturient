@@ -170,28 +170,11 @@
 
         function safeVibrate(type) {
             try {
-                const hf = tg.HapticFeedback;
-                if (!hf) return;
-                if (type === 'tick') {
-                    // iOS-стиль: лёгкий тик при каждом проценте
-                    if (hf.selectionChanged) hf.selectionChanged();
-                } else if (type === 'success') {
-                    // iOS-стиль: тройная вибрация успеха
-                    if (hf.notificationOccurred) hf.notificationOccurred('success');
-                    setTimeout(() => { try { hf.impactOccurred('heavy'); } catch(e){} }, 200);
-                    setTimeout(() => { try { hf.impactOccurred('medium'); } catch(e){} }, 400);
-                } else if (type === 'warning') {
-                    // iOS-стиль: двойной стук предупреждения
-                    if (hf.notificationOccurred) hf.notificationOccurred('warning');
-                    setTimeout(() => { try { hf.impactOccurred('medium'); } catch(e){} }, 250);
-                } else if (type === 'error') {
-                    // iOS-стиль: резкая вибрация ошибки
-                    if (hf.notificationOccurred) hf.notificationOccurred('error');
-                } else if (type === 'medium') {
-                    if (hf.impactOccurred) hf.impactOccurred('medium');
-                } else if (type === 'heavy') {
-                    if (hf.impactOccurred) hf.impactOccurred('heavy');
-                }
+                if (type === 'tick' && tg.HapticFeedback.selectionChanged) tg.HapticFeedback.selectionChanged();
+                else if (type === 'success' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('success');
+                else if (type === 'warning' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('warning');
+                else if (type === 'error' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('error');
+                else if (type === 'medium' && tg.HapticFeedback.impactOccurred) tg.HapticFeedback.impactOccurred('medium');
             } catch (e) {}
         }
 
@@ -481,10 +464,10 @@
             let msgText = ""; let btnText = ""; window.targetBtnLink = "";
             if (prob >= 65) {
                 msgText = "Sizda katta potensial bor chempion. Agar to’g’ri strategiya bilan topshirsangiz aniq shu yil o’qishga kira olasiz. 🤩";
-                btnText = "Batafsil ma'lumot olish"; window.targetBtnLink = "https://t.me/Muhammadkhuja_org"; 
+                btnText = "Batafsil ma'lumot olish"; window.targetBtnLink = "https://t.me/+h7kFTc61fkkyMjFi"; 
             } else {
                 msgText = "Sizda katta imkoniyat bor, faqat natijangiz ustida ozroq ishlashimiz kerak chempion. Kanalda bepul strategiyani qo’lga kiriting va orzuyingizga erishing! 💪";
-                btnText = "Kanalga a'zo bo'lish!"; window.targetBtnLink = "https://t.me/Muhammadkhuja_org"; 
+                btnText = "Kanalga a'zo bo'lish!"; window.targetBtnLink = "https://t.me/+h7kFTc61fkkyMjFi"; 
             }
 
             let finalCertStr = certType; let finalScoreStr = certScore;
@@ -534,22 +517,10 @@
                     document.getElementById("resultText").innerText = msgText;
                     document.getElementById("resultText").classList.add("show");
                     
-                    if (prob >= 65) {
-                        // 🎉 Конфетти + успех
-                        try { if (window.confetti) {
-                            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-                            setTimeout(() => confetti({ particleCount: 80, spread: 100, origin: { y: 0.5 } }), 300);
-                        }} catch(e){}
+                    if (prob >= 75) {
+                        try { if (window.confetti) confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } }); } catch(e){}
                         safeVibrate('success');
-                    } else {
-                        // 🔊 Мотивационный звук при < 65%
-                        try {
-                            let audio = new Audio("https://raw.githubusercontent.com/timfounder/abiturient/main/atlet.mp3");
-                            audio.volume = 0.7;
-                            audio.play().catch(()=>{});
-                        } catch(e){}
-                        safeVibrate(prob > 40 ? 'warning' : 'error');
-                    }
+                    } else { safeVibrate(prob > 40 ? 'warning' : 'error'); }
                     
                     setTimeout(() => { tg.MainButton.setParams({ text: btnText, color: "#34c759", is_active: true }); tg.MainButton.show(); }, 500);
                 }
