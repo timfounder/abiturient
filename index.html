@@ -345,66 +345,121 @@
             let prob = 0; 
             let useSatLogic = (level === "Bachelors" && hasSat && country !== "Germaniya");
 
-            // 🔥 Бонус за уровень сертификата
-            let certBonus = 0;
+            // ═══════════════════════════════════════════════════════
+            // 🎯 РЕАЛИСТИЧНАЯ БАЛЛЬНАЯ СИСТЕМА
+            // Контекст: абитуриент из Узбекистана → Италия / Германия
+            // ═══════════════════════════════════════════════════════
+
+            // --- 1. БАЗОВЫЙ БАЛЛ ПО GPA (0-40 очков) ---
+            let gpaPoints = 0;
+            if (gpaVal >= 4.8) gpaPoints = 40;
+            else if (gpaVal >= 4.5) gpaPoints = 36;
+            else if (gpaVal >= 4.0) gpaPoints = 32;
+            else if (gpaVal >= 3.5) gpaPoints = 26;
+            else if (gpaVal >= 3.0) gpaPoints = 20;
+            else if (gpaVal >= 2.5) gpaPoints = 12;
+            else gpaPoints = 5;
+
+            // --- 2. ЯЗЫКОВОЙ СЕРТИФИКАТ (0-30 очков) ---
+            // Для Германии: немецкий серт = полный вес, IELTS/TOEFL = 60% веса
+            // Для Италии: IELTS/TOEFL = полный вес, немецкий серт = 30% веса
+            let certPoints = 0;
             if (hasCert) {
-                if (certScore === "C2") certBonus = 8;
-                else if (certScore === "C1") certBonus = 5;
-                else if (certScore === "B2") certBonus = 2;
-                else if (certScore === "B1") certBonus = 0;
+                let isGermanCert = (certType === "Nemis tili sertifikati");
+                let isEnglishCert = (certType === "IELTS" || certType === "TOEFL");
+
+                // Базовые баллы по уровню
+                let baseCertPoints = 0;
+                if (certScore === "C2") baseCertPoints = 30;
+                else if (certScore === "C1") baseCertPoints = 27;
+                else if (certScore === "B2") baseCertPoints = 22;
+                else if (certScore === "B1") baseCertPoints = 15;
+
+                // Коэффициент релевантности языка к стране
+                if (country === "Germaniya") {
+                    certPoints = isGermanCert ? baseCertPoints : Math.round(baseCertPoints * 0.6);
+                } else {
+                    // Италия — англоязычные программы
+                    certPoints = isEnglishCert ? baseCertPoints : Math.round(baseCertPoints * 0.3);
+                }
             }
 
-            if (useSatLogic) {
-                let satVal = parseInt(satScoreInput) || 0;
-                if (satVal >= 1400) prob = getRandom(90, 95);
-                else if (satVal >= 1200) prob = getRandom(85, 90);
-                else if (satVal >= 1000) prob = getRandom(78, 85);
-                else prob = getRandom(70, 78);
-                prob += certBonus;
+            // --- 3. ОБРАЗОВАТЕЛЬНЫЙ СТАТУС (0-20 очков) ---
+            // Чем ближе к требуемому уровню — тем лучше
+            let eduPoints = 0;
+            const study = document.getElementById("currentStudy").value;
+
+            if (level === "Foundation") {
+                // Foundation доступен почти всем, но выпускники = лучше
+                if (study === "Maktab") {
+                    if (subStudy === "11-sinf") eduPoints = 16;
+                    else if (subStudy === "10-sinf") eduPoints = 14;
+                    else eduPoints = 10; // 9-sinf
+                } else if (study === "College") {
+                    eduPoints = (subStudy === "2-kurs") ? 17 : 14;
+                } else if (["Maktabni bitirganman", "Kollejni bitirganman"].includes(study)) {
+                    eduPoints = 18;
+                } else {
+                    eduPoints = 20; // Уни студент/выпускник — overqualified, но ок
+                }
+            } else if (level === "Bachelors") {
+                // Bachelors: нужен минимум 11 классов / колледж
+                // Германия строже — нужен Studienkolleg или 1+ год вуза
+                if (study === "Maktab") {
+                    if (subStudy === "11-sinf") eduPoints = (country === "Germaniya") ? 8 : 14;
+                    else if (subStudy === "10-sinf") eduPoints = (country === "Germaniya") ? 5 : 10;
+                    else eduPoints = (country === "Germaniya") ? 2 : 6; // 9-sinf
+                } else if (study === "College") {
+                    eduPoints = (subStudy === "2-kurs") ? 13 : 9;
+                } else if (study === "Maktabni bitirganman" || study === "Kollejni bitirganman") {
+                    eduPoints = (country === "Germaniya") ? 12 : 17;
+                } else if (study === "Universitet talabasiman") {
+                    // Студент вуза — для Германии это ключевое преимущество
+                    let kurs = parseInt(subStudy) || 1;
+                    if (country === "Germaniya") {
+                        eduPoints = (kurs >= 2) ? 18 : 14;
+                    } else {
+                        eduPoints = 18;
+                    }
+                } else {
+                    // Universitetni bitirganman — overqualified для бакалавра
+                    eduPoints = 18;
+                }
             } else if (level === "Masters") {
-                // Masters: GPA и сертификат оба важны
-                if (gpaVal >= 4.5) prob = getRandom(88, 95);
-                else if (gpaVal >= 4.0) prob = getRandom(82, 90);
-                else if (gpaVal >= 3.5) prob = getRandom(75, 85);
-                else if (gpaVal >= 3.0) prob = getRandom(65, 78);
-                else prob = getRandom(30, 55);
-                prob += certBonus;
-            } else if (level === "Foundation") {
-                // Foundation: более лёгкий порог
-                if (!hasCert) prob = getRandom(25, 40);
-                else {
-                    if (gpaVal >= 4.0) prob = getRandom(82, 92);
-                    else if (gpaVal >= 3.0) prob = getRandom(72, 85);
-                    else prob = getRandom(50, 70);
-                    prob += certBonus;
-                }
-            } else {
-                // Bachelors (без SAT)
-                if (!hasCert) prob = getRandom(15, 25);
-                else {
-                    if (gpaVal >= 4.5) {
-                        if (subStudy === "9-sinf") prob = getRandom(68, 76);
-                        else if (subStudy === "10-sinf") prob = getRandom(72, 82);
-                        else prob = getRandom(82, 92);
-                    } else if (gpaVal >= 4.0) {
-                        if (subStudy === "9-sinf") prob = getRandom(62, 72);
-                        else if (subStudy === "10-sinf") prob = getRandom(68, 78);
-                        else prob = getRandom(78, 88);
-                    } else if (gpaVal >= 3.5) {
-                        if (subStudy === "9-sinf") prob = getRandom(55, 65);
-                        else if (subStudy === "10-sinf") prob = getRandom(62, 72);
-                        else prob = getRandom(72, 82);
-                    } else if (gpaVal >= 3.0) {
-                        if (subStudy === "9-sinf") prob = getRandom(48, 58);
-                        else if (subStudy === "10-sinf") prob = getRandom(52, 64);
-                        else prob = getRandom(62, 74);
-                    } else prob = getRandom(30, 55);
-                    prob += certBonus;
+                // Masters: нужен диплом бакалавра или финал универа
+                if (study === "Universitetni bitirganman") {
+                    eduPoints = 20;
+                } else if (study === "Universitet talabasiman") {
+                    let kurs = parseInt(subStudy) || 1;
+                    if (kurs >= 4) eduPoints = 17;
+                    else if (kurs >= 3) eduPoints = 13;
+                    else eduPoints = 6; // 1-2 курс → рановато для магистра
+                } else {
+                    // Школьник/колледж → Masters = нереально
+                    eduPoints = 2;
                 }
             }
 
-            // Ограничиваем максимум 97%
+            // --- 4. SAT БОНУС (0-10 очков, только Bachelors, не Германия) ---
+            let satPoints = 0;
+            if (hasSat && level !== "Masters") {
+                let satVal = parseInt(satScoreInput) || 0;
+                if (satVal >= 1400) satPoints = 10;
+                else if (satVal >= 1200) satPoints = 8;
+                else if (satVal >= 1000) satPoints = 5;
+                else if (satVal >= 800) satPoints = 3;
+                else satPoints = 1;
+                // SAT не так важен для Германии
+                if (country === "Germaniya") satPoints = Math.round(satPoints * 0.3);
+            }
+
+            // --- ИТОГО (0-100) + лёгкий рандом ±3 ---
+            let rawScore = gpaPoints + certPoints + eduPoints + satPoints;
+            if (rawScore > 97) rawScore = 97;
+            if (rawScore < 5) rawScore = 5;
+            prob = rawScore + getRandom(-3, 3);
             if (prob > 97) prob = 97;
+            if (prob < 5) prob = 5;
 
             let msgText = ""; let btnText = ""; window.targetBtnLink = "";
             if (prob >= 65) {
