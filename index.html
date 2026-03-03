@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Abituriyent Anketasi</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-secondary-bg-color: #f2f2f7;
+            --tg-theme-text-color: #000000;
+            --tg-theme-hint-color: #8e8e93;
+            --tg-theme-button-color: #007aff;
+            --border-radius: 16px;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); margin: 0; padding: 20px 16px; box-sizing: border-box; min-height: 100vh; overflow-x: hidden; }
+        .progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 6px; background: rgba(0,0,0,0.05); z-index: 1000; }
+        .progress-bar { height: 100%; width: 0%; background: var(--tg-theme-button-color); transition: width 0.4s ease; border-radius: 0 4px 4px 0; }
+        h2 { font-size: 19px; font-weight: 700; margin: 25px 0 12px 5px; }
+        .card { background-color: var(--tg-theme-bg-color); border-radius: var(--border-radius); padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 20px; transition: all 0.3s ease; }
+        .form-group:last-child { margin-bottom: 0; }
+        label { display: block; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; color: var(--tg-theme-hint-color); }
+        input, select { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; background-color: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); box-sizing: border-box; font-family: inherit; -webkit-appearance: none; }
+        .hidden { display: none !important; }
+
+        .dob-container { display: flex; gap: 8px; }
+        .dob-container select { flex: 1; padding: 14px 8px; text-align: center; }
+
+        #resultScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: var(--tg-theme-bg-color); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
+        #resultScreen.active { transform: translateY(0); }
+        .ring-container { position: relative; width: 180px; height: 180px; margin-bottom: 30px; }
+        .progress-ring { transform: rotate(-90deg); transform-origin: 50% 50%; }
+        .progress-ring__circle-bg { stroke: var(--tg-theme-secondary-bg-color); }
+        .progress-ring__circle { stroke: var(--tg-theme-button-color); transition: stroke-dashoffset 0.1s linear, stroke 0.5s ease; }
+        .circle-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+        .percent-num { font-size: 48px; font-weight: 800; color: var(--tg-theme-text-color); }
+        .percent-label { font-size: 14px; font-weight: 600; color: var(--tg-theme-hint-color); margin-top: -5px; }
+        .result-text { font-size: 17px; font-weight: 600; text-align: center; padding: 0 24px; line-height: 1.5; opacity: 0; transition: opacity 0.5s ease; transform: translateY(20px); }
+        .result-text.show { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+
+    <div id="formContainer">
+        <h2>Shaxsiy ma'lumotlar 👤</h2>
+        <div class="card">
+            <div class="form-group"><label>To’liq Ism va Familiya 📝</label><input type="text" id="fullName" placeholder="Alisher Navoiy"></div>
+            
+            <div class="form-group">
+                <label>Tug’ilgan sana 📅</label>
+                <div class="dob-container">
+                    <select id="dobDay" onchange="validate()"><option value="" disabled selected>Kun</option></select>
+                    <select id="dobMonth" onchange="validate()"><option value="" disabled selected>Oy</option></select>
+                    <select id="dobYear" onchange="validate()"><option value="" disabled selected>Yil</option></select>
+                </div>
+            </div>
+
+            <div class="form-group"><label>Telefon raqam 📱</label><input type="tel" id="phone" placeholder="+998 (90) 123-45-67" value="+998 "></div>
+        </div>
+
+        <h2>Ta'lim va Baholar 📚</h2>
+        <div class="card">
+            <div class="form-group">
+                <label>Hozirgi holatingiz 🏫</label>
+                <select id="currentStudy" onchange="toggleStudyOptions()">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="Maktab">Maktab</option>
+                    <option value="College">College</option>
+                    <option value="Maktabni bitirganman">Maktabni bitirganman</option>
+                    <option value="Kollejni bitirganman">Kollejni bitirganman</option>
+                    <option value="Universitet talabasiman">Universitet talabasiman</option>
+                    <option value="Universitetni bitirganman">Universitetni bitirganman</option>
+                </select>
+            </div>
+            <div class="form-group hidden" id="studySubGroup"><label id="studySubLabel">Sinf / Kurs</label><select id="studySubSelect" onchange="validate()"></select></div>
+            <div class="form-group"><label>O’rtacha baho / GPA</label><input type="text" id="gpa" placeholder="Masalan: 4.5 yoki 85%"></div>
+        </div>
+
+        <h2>Sertifikat va Yo'nalish 🌍</h2>
+        <div class="card">
+            <div class="form-group">
+                <label>Til sertifikati 📜</label>
+                <select id="certType" onchange="toggleCertOptions()">
+                    <option value="None">Mavjud emas</option>
+                    <option value="IELTS">IELTS</option>
+                    <option value="TOEFL">TOEFL</option>
+                    <option value="Nemis tili sertifikati">Nemis tili sertifikati</option>
+                </select>
+            </div>
+            <div class="form-group hidden" id="scoreGroup">
+                <label>Sertifikat darajasi 🎯</label>
+                <select id="certScoreSelect" onchange="validate()">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="B1">B1</option>
+                    <option value="B2">B2</option>
+                    <option value="C1">C1</option>
+                    <option value="C2">C2</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>SAT Sertifikati 🎓</label>
+                <select id="satType" onchange="toggleSatOptions()">
+                    <option value="None">Mavjud emas</option>
+                    <option value="Yes">Mavjud</option>
+                </select>
+            </div>
+            <div class="form-group hidden" id="satScoreGroup">
+                <label>SAT balingiz 🎯</label>
+                <input type="text" id="satScoreInput" inputmode="numeric" placeholder="Masalan: 1450">
+            </div>
+
+            <div class="form-group"><label>Tanlangan soha 💼</label><input type="text" id="fieldOfStudy" placeholder="Law, IT, Biznes..."></div>
+
+            <div class="form-group">
+                <label>Qaysi davlatga? ✈️</label>
+                <select id="country">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="Italiya">Italiya</option>
+                    <option value="Germaniya">Germaniya</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Topshiriladigan daraja 🎓</label>
+                <select id="finalStage" onchange="validate()">
+                    <option value="" disabled selected>Tanlang...</option>
+                    <option value="Foundation">Foundation</option>
+                    <option value="Bachelors">Bachelors (Bakalavr)</option>
+                    <option value="Masters">Masters (Magistr)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultScreen">
+        <div class="ring-container">
+            <svg class="progress-ring" width="180" height="180">
+               <circle class="progress-ring__circle-bg" stroke-width="12" fill="transparent" r="80" cx="90" cy="90"/>
+               <circle id="animCircle" class="progress-ring__circle" stroke-width="12" fill="transparent" r="80" cx="90" cy="90"/>
+            </svg>
+            <div class="circle-content"><div class="percent-num" id="percentNum">0%</div><div class="percent-label">Imkoniyat</div></div>
+        </div>
+        <div class="result-text" id="resultText">Hisoblanmoqda...</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready(); tg.expand();
+        tg.MainButton.setParams({ text: "YUBORISH", color: "#c4c4c6", is_active: false });
+        tg.MainButton.show();
+
+        let finalPayload = null;
+        const radius = 80;
+        const circumference = radius * 2 * Math.PI;
+        const circle = document.getElementById('animCircle');
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = circumference;
+
+        function setProgress(percent) {
+            const offset = circumference - (percent / 100 * circumference);
+            circle.style.strokeDashoffset = offset;
+            if (percent < 30) circle.style.stroke = '#ff3b30';
+            else if (percent > 70) circle.style.stroke = '#34c759';
+            else circle.style.stroke = '#ffcc00';
+        }
+
+        function safeVibrate(type) {
+            try {
+                if (type === 'tick' && tg.HapticFeedback.selectionChanged) tg.HapticFeedback.selectionChanged();
+                else if (type === 'success' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('success');
+                else if (type === 'warning' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('warning');
+                else if (type === 'error' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('error');
+                else if (type === 'medium' && tg.HapticFeedback.impactOccurred) tg.HapticFeedback.impactOccurred('medium');
+            } catch (e) {}
+        }
+
+        const dobDay = document.getElementById('dobDay');
+        for(let i=1; i<=31; i++) {
+            let val = i < 10 ? '0'+i : i;
+            dobDay.innerHTML += `<option value="${val}">${val}</option>`;
+        }
+        
+        const dobMonth = document.getElementById('dobMonth');
+        const months = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
+        months.forEach((m, i) => {
+            let val = i + 1;
+            val = val < 10 ? '0'+val : val;
+            dobMonth.innerHTML += `<option value="${val}">${m}</option>`;
+        });
+        
+        const dobYear = document.getElementById('dobYear');
+        const currentYear = new Date().getFullYear();
+        for(let i=currentYear-12; i>=1990; i--) { 
+            dobYear.innerHTML += `<option value="${i}">${i}</option>`;
+        }
+
+        const nameInput = document.getElementById('fullName');
+        nameInput.addEventListener('input', function(e) {
+            let start = this.selectionStart; let val = this.value;
+            this.value = val.replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+            this.setSelectionRange(start, start); validate();
+        });
+
+        const phoneInput = document.getElementById('phone');
+        phoneInput.addEventListener('input', function(e) {
+            let input = this.value.replace(/\D/g, ''); 
+            if (!input.startsWith('998')) input = '998' + input.replace(/^998/, ''); 
+            if (input.length > 12) input = input.substring(0, 12); 
+            
+            let formatted = '+998';
+            if (input.length > 3) formatted += ' (' + input.substring(3, 5);
+            if (input.length > 5) formatted += ') ' + input.substring(5, 8);
+            if (input.length > 8) formatted += '-' + input.substring(8, 10);
+            if (input.length > 10) formatted += '-' + input.substring(10, 12);
+            this.value = formatted; validate();
+        });
+
+        const satInput = document.getElementById('satScoreInput');
+        satInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length > 4) this.value = this.value.substring(0, 4);
+            validate();
+        });
+
+        function toggleStudyOptions() {
+            const study = document.getElementById("currentStudy").value;
+            const subGroup = document.getElementById("studySubGroup");
+            const subSelect = document.getElementById("studySubSelect");
+            const finalStage = document.getElementById("finalStage");
+            const mastersOption = finalStage.querySelector('option[value="Masters"]');
+            
+            if (["Universitet talabasiman", "Universitetni bitirganman"].includes(study)) {
+                mastersOption.disabled = false; mastersOption.hidden = false;
+            } else {
+                mastersOption.disabled = true; mastersOption.hidden = true;
+                if (finalStage.value === "Masters") finalStage.value = ""; 
+            }
+
+            subSelect.innerHTML = '<option value="" disabled selected>Tanlang...</option>';
+            if (study === "Maktab") { subGroup.classList.remove("hidden"); document.getElementById("studySubLabel").innerText = "Nechanchi sinf? 🏫"; [9, 10, 11].forEach(v => subSelect.innerHTML += `<option value="${v}-sinf">${v}-sinf</option>`); } 
+            else if (study === "College") { subGroup.classList.remove("hidden"); document.getElementById("studySubLabel").innerText = "Nechanchi kurs? 🏫"; [1, 2].forEach(v => subSelect.innerHTML += `<option value="${v}-kurs">${v}-kurs</option>`); } 
+            else if (study === "Universitet talabasiman") { subGroup.classList.remove("hidden"); document.getElementById("studySubLabel").innerText = "Nechanchi kurs? 🎓"; [1, 2, 3, 4].forEach(v => subSelect.innerHTML += `<option value="${v}-kurs">${v}-kurs</option>`); } 
+            else { subGroup.classList.add("hidden"); subSelect.value = "N/A"; }
+            validate();
+        }
+
+        function toggleCertOptions() {
+            const val = document.getElementById("certType").value;
+            const scoreGroup = document.getElementById("scoreGroup");
+            const scoreSelect = document.getElementById("certScoreSelect");
+            if (val === "None") { scoreGroup.classList.add("hidden"); scoreSelect.value = "N/A"; } 
+            else { scoreGroup.classList.remove("hidden"); if (scoreSelect.value === "N/A") scoreSelect.value = ""; }
+            validate();
+        }
+
+        function toggleSatOptions() {
+            const val = document.getElementById("satType").value;
+            const satGroup = document.getElementById("satScoreGroup");
+            const satInput = document.getElementById("satScoreInput");
+            if (val === "None") { satGroup.classList.add("hidden"); satInput.value = "N/A"; } 
+            else { satGroup.classList.remove("hidden"); if (satInput.value === "N/A") satInput.value = ""; }
+            validate();
+        }
+
+        function validate() {
+            let isValid = true;
+            let filledCount = 0;
+            let totalCount = 0;
+
+            const checkField = (id) => {
+                totalCount++;
+                const el = document.getElementById(id);
+                if (el && el.value && String(el.value).trim() !== "" && String(el.value) !== "N/A") {
+                    filledCount++;
+                } else {
+                    isValid = false;
+                }
+            };
+
+            checkField("fullName"); checkField("currentStudy"); checkField("gpa");
+            checkField("fieldOfStudy"); checkField("country"); checkField("finalStage");
+            checkField("dobDay"); checkField("dobMonth"); checkField("dobYear");
+
+            if (!document.getElementById("studySubGroup").classList.contains("hidden")) checkField("studySubSelect");
+            if (!document.getElementById("scoreGroup").classList.contains("hidden")) checkField("certScoreSelect");
+            if (!document.getElementById("satScoreGroup").classList.contains("hidden")) checkField("satScoreInput");
+
+            totalCount++;
+            const phoneDigits = document.getElementById("phone").value.replace(/\D/g, '').length;
+            if (phoneDigits >= 12) filledCount++; else isValid = false;
+
+            if (!finalPayload) {
+                tg.MainButton.setParams({ color: isValid ? "#007aff" : "#c4c4c6", is_active: isValid, text: "YUBORISH" });
+                if (isValid) tg.MainButton.show();
+            }
+            document.getElementById('progressBar').style.width = (filledCount / totalCount * 100) + "%";
+        }
+
+        document.querySelectorAll('input, select').forEach(el => { el.addEventListener('input', validate); el.addEventListener('change', validate); });
+        function getRandom(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+        tg.MainButton.onClick(() => {
+            // --- ВТОРОЕ НАЖАТИЕ: Открываем ТГ-ссылку и мягко закрываем аппку ---
+            if (finalPayload) { 
+                if (window.targetBtnLink) { tg.openTelegramLink(window.targetBtnLink); }
+                setTimeout(() => { tg.close(); }, 100); 
+                return; 
+            }
+            
+            // --- ПЕРВОЕ НАЖАТИЕ: Расчет и ФОНОВАЯ ОТПРАВКА ---
+            safeVibrate('medium');
+            
+            let finalStudyStatus = document.getElementById("currentStudy").value;
+            const subStudy = document.getElementById("studySubSelect").value;
+            if (subStudy && subStudy !== "N/A" && !document.getElementById("studySubGroup").classList.contains("hidden")) finalStudyStatus += ` (${subStudy})`;
+
+            // 🔥 УМНАЯ ОБРАБОТКА GPA (дроби 5/5, проценты 85%, запятые 4,5)
+            let gpaStr = document.getElementById("gpa").value.replace(/,/g, '.');
+            let gpaVal = 0;
+            if (gpaStr.includes('/')) {
+                gpaVal = parseFloat(gpaStr.split('/')[0]);
+            } else {
+                let match = gpaStr.match(/\d+(\.\d+)?/);
+                if (match) gpaVal = parseFloat(match[0]);
+            }
+            if (isNaN(gpaVal)) gpaVal = 0; 
+            if (gpaVal > 5) gpaVal = (gpaVal / 100) * 5;
+
+            const certType = document.getElementById("certType").value;
+            const certScore = (certType === "None") ? "Yo'q" : document.getElementById("certScoreSelect").value;
+            const hasCert = certType !== "None";
+
+            const satType = document.getElementById("satType").value;
+            const satScoreInput = document.getElementById("satScoreInput").value;
+            const hasSat = satType === "Yes";
+
+            const level = document.getElementById("finalStage").value;
+            const country = document.getElementById("country").value;
+            const finalDobStr = `${document.getElementById("dobDay").value}.${document.getElementById("dobMonth").value}.${document.getElementById("dobYear").value}`;
+            
+            let prob = 0; 
+            let useSatLogic = (level === "Bachelors" && hasSat && country !== "Germaniya");
+
+            // ═══════════════════════════════════════════════════════
+            // 🎯 РЕАЛИСТИЧНАЯ БАЛЛЬНАЯ СИСТЕМА
+            // Контекст: абитуриент из Узбекистана → Италия / Германия
+            // ═══════════════════════════════════════════════════════
+
+            // --- 1. БАЗОВЫЙ БАЛЛ ПО GPA (0-40 очков) ---
+            let gpaPoints = 0;
+            if (gpaVal >= 4.8) gpaPoints = 40;
+            else if (gpaVal >= 4.5) gpaPoints = 36;
+            else if (gpaVal >= 4.0) gpaPoints = 32;
+            else if (gpaVal >= 3.5) gpaPoints = 26;
+            else if (gpaVal >= 3.0) gpaPoints = 20;
+            else if (gpaVal >= 2.5) gpaPoints = 12;
+            else gpaPoints = 5;
+
+            // --- 2. ЯЗЫКОВОЙ СЕРТИФИКАТ (0-30 очков) ---
+            // Для Германии: немецкий серт = полный вес, IELTS/TOEFL = 60% веса
+            // Для Италии: IELTS/TOEFL = полный вес, немецкий серт = 30% веса
+            let certPoints = 0;
+            if (hasCert) {
+                let isGermanCert = (certType === "Nemis tili sertifikati");
+                let isEnglishCert = (certType === "IELTS" || certType === "TOEFL");
+
+                // Базовые баллы по уровню
+                let baseCertPoints = 0;
+                if (certScore === "C2") baseCertPoints = 30;
+                else if (certScore === "C1") baseCertPoints = 27;
+                else if (certScore === "B2") baseCertPoints = 22;
+                else if (certScore === "B1") baseCertPoints = 15;
+
+                // Коэффициент релевантности языка к стране
+                if (country === "Germaniya") {
+                    certPoints = isGermanCert ? baseCertPoints : Math.round(baseCertPoints * 0.6);
+                } else {
+                    // Италия — англоязычные программы
+                    certPoints = isEnglishCert ? baseCertPoints : Math.round(baseCertPoints * 0.3);
+                }
+            }
+
+            // --- 3. ОБРАЗОВАТЕЛЬНЫЙ СТАТУС (0-20 очков) ---
+            // Чем ближе к требуемому уровню — тем лучше
+            let eduPoints = 0;
+            const study = document.getElementById("currentStudy").value;
+
+            if (level === "Foundation") {
+                // Foundation доступен почти всем, но выпускники = лучше
+                if (study === "Maktab") {
+                    if (subStudy === "11-sinf") eduPoints = 16;
+                    else if (subStudy === "10-sinf") eduPoints = 14;
+                    else eduPoints = 10; // 9-sinf
+                } else if (study === "College") {
+                    eduPoints = (subStudy === "2-kurs") ? 17 : 14;
+                } else if (["Maktabni bitirganman", "Kollejni bitirganman"].includes(study)) {
+                    eduPoints = 18;
+                } else {
+                    eduPoints = 20; // Уни студент/выпускник — overqualified, но ок
+                }
+            } else if (level === "Bachelors") {
+                // Bachelors: нужен минимум 11 классов / колледж
+                // Германия строже — нужен Studienkolleg или 1+ год вуза
+                if (study === "Maktab") {
+                    if (subStudy === "11-sinf") eduPoints = (country === "Germaniya") ? 8 : 14;
+                    else if (subStudy === "10-sinf") eduPoints = (country === "Germaniya") ? 5 : 10;
+                    else eduPoints = (country === "Germaniya") ? 2 : 6; // 9-sinf
+                } else if (study === "College") {
+                    eduPoints = (subStudy === "2-kurs") ? 13 : 9;
+                } else if (study === "Maktabni bitirganman" || study === "Kollejni bitirganman") {
+                    eduPoints = (country === "Germaniya") ? 12 : 17;
+                } else if (study === "Universitet talabasiman") {
+                    // Студент вуза — для Германии это ключевое преимущество
+                    let kurs = parseInt(subStudy) || 1;
+                    if (country === "Germaniya") {
+                        eduPoints = (kurs >= 2) ? 18 : 14;
+                    } else {
+                        eduPoints = 18;
+                    }
+                } else {
+                    // Universitetni bitirganman — overqualified для бакалавра
+                    eduPoints = 18;
+                }
+            } else if (level === "Masters") {
+                // Masters: нужен диплом бакалавра или финал универа
+                if (study === "Universitetni bitirganman") {
+                    eduPoints = 20;
+                } else if (study === "Universitet talabasiman") {
+                    let kurs = parseInt(subStudy) || 1;
+                    if (kurs >= 4) eduPoints = 17;
+                    else if (kurs >= 3) eduPoints = 13;
+                    else eduPoints = 6; // 1-2 курс → рановато для магистра
+                } else {
+                    // Школьник/колледж → Masters = нереально
+                    eduPoints = 2;
+                }
+            }
+
+            // --- 4. SAT БОНУС (0-10 очков, только Bachelors, не Германия) ---
+            let satPoints = 0;
+            if (hasSat && level !== "Masters") {
+                let satVal = parseInt(satScoreInput) || 0;
+                if (satVal >= 1400) satPoints = 10;
+                else if (satVal >= 1200) satPoints = 8;
+                else if (satVal >= 1000) satPoints = 5;
+                else if (satVal >= 800) satPoints = 3;
+                else satPoints = 1;
+                // SAT не так важен для Германии
+                if (country === "Germaniya") satPoints = Math.round(satPoints * 0.3);
+            }
+
+            // --- ИТОГО (0-100) + лёгкий рандом ±3 ---
+            let rawScore = gpaPoints + certPoints + eduPoints + satPoints;
+            if (rawScore > 97) rawScore = 97;
+            if (rawScore < 5) rawScore = 5;
+            prob = rawScore + getRandom(-3, 3);
+            if (prob > 97) prob = 97;
+            if (prob < 5) prob = 5;
+
+            let msgText = ""; let btnText = ""; window.targetBtnLink = "";
+            if (prob >= 65) {
+                msgText = "Sizda katta potensial bor chempion. Agar to’g’ri strategiya bilan topshirsangiz aniq shu yil o’qishga kira olasiz. 🤩";
+                btnText = "Batafsil ma'lumot olish"; window.targetBtnLink = "https://t.me/+h7kFTc61fkkyMjFi"; 
+            } else {
+                msgText = "Sizda katta imkoniyat bor, faqat natijangiz ustida ozroq ishlashimiz kerak chempion. Kanalda bepul strategiyani qo’lga kiriting va orzuyingizga erishing! 💪";
+                btnText = "Kanalga a'zo bo'lish!"; window.targetBtnLink = "https://t.me/+h7kFTc61fkkyMjFi"; 
+            }
+
+            let finalCertStr = certType; let finalScoreStr = certScore;
+            if (hasSat) {
+                if (finalCertStr === "None") { finalCertStr = "SAT"; finalScoreStr = satScoreInput; } 
+                else { finalCertStr += " + SAT"; finalScoreStr += ` | SAT: ${satScoreInput}`; }
+            }
+
+            // 🔥 Умное получение данных пользователя из Telegram (Имя + ID)
+            let tgUsername = "Kiritilmagan";
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                if (tg.initDataUnsafe.user.username) {
+                    tgUsername = tg.initDataUnsafe.user.username; 
+                } else {
+                    let firstName = tg.initDataUnsafe.user.first_name || "Ismsiz";
+                    let tgId = tg.initDataUnsafe.user.id || "";
+                    tgUsername = firstName + " (ID: " + tgId + ")";
+                }
+            }
+
+            finalPayload = {
+                name: document.getElementById("fullName").value, dob: finalDobStr, phone: document.getElementById("phone").value,
+                study: finalStudyStatus, gpa: document.getElementById("gpa").value, cert: finalCertStr, score: finalScoreStr,
+                field: document.getElementById("fieldOfStudy").value, country: country, level: level, probability: prob,
+                username: tgUsername
+            };
+
+            // 🔥 ЖЕЛЕЗОБЕТОННАЯ ОТПРАВКА В ФОНЕ (Через XMLHttpRequest)
+            const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbxnet8ErUY23dtv21IyryT1OZe7PdJvL4gIGhPLTnpoG2NqcJJN13NnAhbkU9qitLmg/exec";
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", GOOGLE_SHEET_URL, true);
+            xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8"); 
+            xhr.send(JSON.stringify(finalPayload));
+
+            // Запускаем красивую анимацию
+            document.getElementById("resultScreen").classList.add("active");
+            tg.MainButton.hide();
+
+            let currentNum = 0; let speed = 25; 
+            let interval = setInterval(() => {
+                currentNum++;
+                document.getElementById("percentNum").innerText = currentNum + "%";
+                setProgress(currentNum); safeVibrate('tick');
+                
+                if (currentNum >= prob) {
+                    clearInterval(interval);
+                    document.getElementById("resultText").innerText = msgText;
+                    document.getElementById("resultText").classList.add("show");
+                    
+                    if (prob >= 75) {
+                        try { if (window.confetti) confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } }); } catch(e){}
+                        safeVibrate('success');
+                    } else { safeVibrate(prob > 40 ? 'warning' : 'error'); }
+                    
+                    setTimeout(() => { tg.MainButton.setParams({ text: btnText, color: "#34c759", is_active: true }); tg.MainButton.show(); }, 500);
+                }
+            }, speed);
+        });
+    </script>
+</body>
+</html>
