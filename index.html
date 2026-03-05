@@ -189,28 +189,8 @@
         tg.MainButton.setParams({ text: "YUBORISH", color: "#c4c4c6", is_active: false });
         tg.MainButton.show();
 
-        // 📊 ТРЕКИНГ: Тихая отправка события открытия боту (без уведомления)
-        const TG_BOT_TOKEN = "8698216238:AAEY8JV0xarqjRKnlilkrIisz7R8hcXBlME";
-        const TG_ADMIN_ID = "6042618441";
-
-        try {
-            let openUser = "Anonim";
-            let openUserId = "";
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                openUserId = tg.initDataUnsafe.user.id || "";
-                if (tg.initDataUnsafe.user.username) openUser = tg.initDataUnsafe.user.username;
-                else openUser = (tg.initDataUnsafe.user.first_name || "Ismsiz");
-            }
-            // Отправляем боту тихое сообщение через sendMessage к самому боту (бот запишет в счётчик)
-            var oxhr = new XMLHttpRequest();
-            oxhr.open("POST", "https://api.telegram.org/bot" + TG_BOT_TOKEN + "/sendMessage", true);
-            oxhr.setRequestHeader("Content-Type", "application/json");
-            oxhr.send(JSON.stringify({
-                chat_id: TG_ADMIN_ID,
-                text: "📊 __open__:" + openUserId + ":" + openUser,
-                disable_notification: true
-            }));
-        } catch(e) {}
+        // 📊 ТРЕКИНГ: Безопасный — без токена в коде
+        // Открытие WebApp отслеживается через /start в main.py
 
         let finalPayload = null;
         const radius = 80;
