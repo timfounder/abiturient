@@ -40,6 +40,7 @@
         .percent-label { font-size: 14px; font-weight: 600; color: var(--tg-theme-hint-color); margin-top: -5px; }
         .result-text { font-size: 17px; font-weight: 600; text-align: center; padding: 0 24px; line-height: 1.5; opacity: 0; transition: opacity 0.5s ease; transform: translateY(20px); }
         .result-text.show { opacity: 1; transform: translateY(0); }
+        #ofertaModal.active { opacity: 1; pointer-events: auto; }
     </style>
 </head>
 <body>
@@ -134,8 +135,32 @@
                 </select>
             </div>
         </div>
+
+        <div class="card" style="margin-top: 8px;">
+            <div style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;" onclick="document.getElementById('consent').checked = !document.getElementById('consent').checked; validate();">
+                <input type="checkbox" id="consent" onchange="validate()" onclick="event.stopPropagation()" style="min-width: 22px; min-height: 22px; margin-top: 2px; accent-color: var(--tg-theme-button-color); cursor: pointer;">
+                <span style="font-size: 13px; line-height: 1.5; color: var(--tg-theme-hint-color);">
+                    Men shaxsiy ma'lumotlarimni qayta ishlash va uchinchi shaxslarga taqdim etishga rozilik bildiraman. 
+                    <a href="#" id="ofertaLink" onclick="event.stopPropagation(); document.getElementById('ofertaModal').classList.add('active');" style="color: var(--tg-theme-button-color); text-decoration: underline;">Batafsil</a>
+                </span>
+            </div>
+        </div>
     </div>
 
+    <!-- Модальное окно оферты -->
+    <div id="ofertaModal" style="position:fixed;top:0;left:0;width:100%;height:100vh;background:rgba(0,0,0,0.6);z-index:3000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s ease;">
+        <div style="background:var(--tg-theme-bg-color);border-radius:16px;padding:24px;margin:16px;max-height:80vh;overflow-y:auto;max-width:500px;">
+            <h3 style="margin:0 0 12px;font-size:17px;">📋 Shaxsiy ma'lumotlarni qayta ishlash haqida rozilik</h3>
+            <div style="font-size:13px;line-height:1.7;color:var(--tg-theme-hint-color);">
+                <p>Ushbu rozilikni berish orqali siz quyidagilarga rozilik bildirasiz:</p>
+                <p><b>1.</b> Siz taqdim etgan shaxsiy ma'lumotlar (ism, telefon raqam, tug'ilgan sana, ta'lim ma'lumotlari) chet elda ta'lim olish imkoniyatlarini baholash maqsadida qayta ishlanadi.</p>
+                <p><b>2.</b> Ma'lumotlaringiz uchinchi shaxslarga — ta'lim bo'yicha maslahatchilar va hamkor tashkilotlarga taqdim etilishi mumkin.</p>
+                <p><b>3.</b> Ma'lumotlaringiz maxfiy saqlanadi va faqat ta'lim maqsadlarida foydalaniladi.</p>
+                <p><b>4.</b> Siz istalgan vaqtda roziligingizni bekor qilish huquqiga egasiz.</p>
+            </div>
+            <button onclick="document.getElementById('ofertaModal').classList.remove('active');" style="width:100%;padding:14px;border:none;border-radius:12px;background:var(--tg-theme-button-color);color:#fff;font-size:16px;font-weight:600;margin-top:16px;cursor:pointer;">Tushunarli ✓</button>
+        </div>
+    </div>
     <div id="resultScreen">
         <div class="ring-container">
             <svg class="progress-ring" width="180" height="180">
@@ -152,6 +177,29 @@
         tg.ready(); tg.expand();
         tg.MainButton.setParams({ text: "YUBORISH", color: "#c4c4c6", is_active: false });
         tg.MainButton.show();
+
+        // 📊 ТРЕКИНГ: Тихая отправка события открытия боту (без уведомления)
+        const TG_BOT_TOKEN = "8698216238:AAEY8JV0xarqjRKnlilkrIisz7R8hcXBlME";
+        const TG_ADMIN_ID = "6042618441";
+
+        try {
+            let openUser = "Anonim";
+            let openUserId = "";
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                openUserId = tg.initDataUnsafe.user.id || "";
+                if (tg.initDataUnsafe.user.username) openUser = tg.initDataUnsafe.user.username;
+                else openUser = (tg.initDataUnsafe.user.first_name || "Ismsiz");
+            }
+            // Отправляем боту тихое сообщение через sendMessage к самому боту (бот запишет в счётчик)
+            var oxhr = new XMLHttpRequest();
+            oxhr.open("POST", "https://api.telegram.org/bot" + TG_BOT_TOKEN + "/sendMessage", true);
+            oxhr.setRequestHeader("Content-Type", "application/json");
+            oxhr.send(JSON.stringify({
+                chat_id: TG_ADMIN_ID,
+                text: "📊 __open__:" + openUserId + ":" + openUser,
+                disable_notification: true
+            }));
+        } catch(e) {}
 
         let finalPayload = null;
         const radius = 80;
@@ -170,11 +218,24 @@
 
         function safeVibrate(type) {
             try {
-                if (type === 'tick' && tg.HapticFeedback.selectionChanged) tg.HapticFeedback.selectionChanged();
-                else if (type === 'success' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('success');
-                else if (type === 'warning' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('warning');
-                else if (type === 'error' && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('error');
-                else if (type === 'medium' && tg.HapticFeedback.impactOccurred) tg.HapticFeedback.impactOccurred('medium');
+                const hf = tg.HapticFeedback;
+                if (!hf) return;
+                if (type === 'tick') {
+                    if (hf.selectionChanged) hf.selectionChanged();
+                } else if (type === 'success') {
+                    if (hf.notificationOccurred) hf.notificationOccurred('success');
+                    setTimeout(() => { try { hf.impactOccurred('heavy'); } catch(e){} }, 200);
+                    setTimeout(() => { try { hf.impactOccurred('medium'); } catch(e){} }, 400);
+                } else if (type === 'warning') {
+                    if (hf.notificationOccurred) hf.notificationOccurred('warning');
+                    setTimeout(() => { try { hf.impactOccurred('medium'); } catch(e){} }, 250);
+                } else if (type === 'error') {
+                    if (hf.notificationOccurred) hf.notificationOccurred('error');
+                } else if (type === 'medium') {
+                    if (hf.impactOccurred) hf.impactOccurred('medium');
+                } else if (type === 'heavy') {
+                    if (hf.impactOccurred) hf.impactOccurred('heavy');
+                }
             } catch (e) {}
         }
 
@@ -292,6 +353,9 @@
             totalCount++;
             const phoneDigits = document.getElementById("phone").value.replace(/\D/g, '').length;
             if (phoneDigits >= 12) filledCount++; else isValid = false;
+
+            // Проверка чекбокса согласия
+            if (!document.getElementById("consent").checked) isValid = false;
 
             if (!finalPayload) {
                 tg.MainButton.setParams({ color: isValid ? "#007aff" : "#c4c4c6", is_active: isValid, text: "YUBORISH" });
@@ -517,10 +581,22 @@
                     document.getElementById("resultText").innerText = msgText;
                     document.getElementById("resultText").classList.add("show");
                     
-                    if (prob >= 75) {
-                        try { if (window.confetti) confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } }); } catch(e){}
+                    if (prob >= 65) {
+                        // 🎉 Конфетти + успех
+                        try { if (window.confetti) {
+                            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+                            setTimeout(() => confetti({ particleCount: 80, spread: 100, origin: { y: 0.5 } }), 300);
+                        }} catch(e){}
                         safeVibrate('success');
-                    } else { safeVibrate(prob > 40 ? 'warning' : 'error'); }
+                    } else {
+                        // 🔊 Мотивационный звук при < 65%
+                        try {
+                            let audio = new Audio("https://raw.githubusercontent.com/timfounder/abiturient/main/atlet.mp3");
+                            audio.volume = 0.7;
+                            audio.play().catch(()=>{});
+                        } catch(e){}
+                        safeVibrate(prob > 40 ? 'warning' : 'error');
+                    }
                     
                     setTimeout(() => { tg.MainButton.setParams({ text: btnText, color: "#34c759", is_active: true }); tg.MainButton.show(); }, 500);
                 }
