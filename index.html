@@ -137,8 +137,19 @@
         </div>
 
         <div class="card" style="margin-top: 8px;">
-            <div style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;" onclick="document.getElementById('consent').checked = !document.getElementById('consent').checked; validate();">
-                <input type="checkbox" id="consent" onchange="validate()" onclick="event.stopPropagation()" style="min-width: 22px; min-height: 22px; margin-top: 2px; accent-color: var(--tg-theme-button-color); cursor: pointer;">
+            <div style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;" onclick="let c=document.getElementById('consent'); c.checked=!c.checked; validate();">
+                <label class="ios-toggle" onclick="event.stopPropagation();">
+                    <input type="checkbox" id="consent" onchange="validate()">
+                    <span class="ios-slider"></span>
+                </label>
+                <style>
+                    .ios-toggle { position: relative; min-width: 51px; width: 51px; height: 31px; display: inline-block; flex-shrink: 0; margin-top: 2px; }
+                    .ios-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+                    .ios-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(120,120,128,0.32); border-radius: 31px; transition: background-color 0.3s ease; }
+                    .ios-slider::before { content: ''; position: absolute; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: #fff; border-radius: 50%; transition: transform 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+                    .ios-toggle input:checked + .ios-slider { background-color: #34c759; }
+                    .ios-toggle input:checked + .ios-slider::before { transform: translateX(20px); }
+                </style>
                 <span style="font-size: 13px; line-height: 1.5; color: var(--tg-theme-hint-color);">
                     Men shaxsiy ma'lumotlarimni qayta ishlash va uchinchi shaxslarga taqdim etishga rozilik bildiraman. 
                     <a href="#" id="ofertaLink" onclick="event.stopPropagation(); document.getElementById('ofertaModal').classList.add('active');" style="color: var(--tg-theme-button-color); text-decoration: underline;">Batafsil</a>
